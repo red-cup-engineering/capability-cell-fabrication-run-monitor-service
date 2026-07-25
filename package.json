@@ -6,18 +6,22 @@
   "description": "Validates and folds one append-only Capability Cell fabrication event trajectory into its current observable state.",
   "exports": {
     ".": "./src/observe.mjs",
+    "./law": "./src/law.mjs",
     "./schemas": "./src/schemas.mjs"
   },
   "bin": {
     "observe-capability-cell-fabrication-run": "./bin/observe.mjs"
   },
   "scripts": {
-    "check": "node --check src/schemas.mjs && node --check src/observe.mjs && node --check bin/observe.mjs",
+    "check": "node --check src/schemas.mjs && node --check src/law.mjs && node --check src/observe.mjs && node --check bin/observe.mjs",
     "test": "node --test test/*.test.mjs",
     "verify": "npm run check && npm test"
   },
   "engines": {
     "node": ">=22"
+  },
+  "dependencies": {
+    "@emsenn/rmn-semantic-conformance": "file:../../../../../lenticule-science/services/obsmetrological-services-section/services/rmn-semantic-conformance"
   },
   "x-agentic-metro-enterprise": {
     "node-id": "capability-cell-fabrication-run-monitor-service",

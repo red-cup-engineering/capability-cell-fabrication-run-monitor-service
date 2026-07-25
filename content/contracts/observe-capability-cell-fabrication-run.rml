@@ -1,0 +1,10 @@
+#lang rmn/v2
+(map
+  ("type" "CapabilityCellFabricationRunObservationLaw")
+  ("version" 1)
+  ("provider" "one sovereign capability-cell fabrication-run monitoring settlement")
+  ("precondition" "One declared fabrication stage order and one ordered append-only trajectory whose events claim canonical content identities, sequence numbers, predecessor links, and a common run identity.")
+  ("operation" "Validate every supplied event against its canonical content identity and causal predecessor, then fold the trajectory into one observed demand, completed-stage set, current stage, obstruction, hired-cell set, result, event count, and event head. Observe only; do not analyze, plan, execute, mutate, or invent missing events.")
+  ("postcondition" "Return one deterministic observation of the supplied trajectory, preserving the exact events and distinguishing ready, obstructed, and completed states.")
+  ("refusal" "Refuse a broken content identity, sequence, predecessor link, run identity, declared stage order, event form, or request to perform a non-monitoring transition.")
+  ("invariants" ("one-purchasable-capability" "append-only-input" "deterministic-fold" "monotone-retry-completion" "unknown-is-not-zero" "no-event-count-ceiling" "no-time-ceiling" "no-token-ceiling" "no-byte-ceiling" "monitor-only")))
