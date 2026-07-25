@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:red-cup-engineering:schema:observed-capability-cell-fabrication-run-state:v1",
+  "type": "object",
+  "required": ["id", "status", "demand", "completed", "currentStage", "obstruction", "hiredCells", "result", "eventHead", "eventCount", "events"],
+  "properties": {
+    "id": { "type": "string" },
+    "status": { "enum": ["ready", "obstructed", "completed"] },
+    "demand": {},
+    "completed": { "type": "array", "items": { "type": "string" } },
+    "currentStage": { "type": ["string", "null"] },
+    "obstruction": { "type": ["object", "null"] },
+    "hiredCells": { "type": "array", "items": { "type": "string" } },
+    "result": { "type": ["object", "null"] },
+    "eventHead": { "type": "string" },
+    "eventCount": { "type": "integer", "minimum": 1 },
+    "events": { "type": "array", "items": { "type": "object" } }
+  },
+  "additionalProperties": false
+}

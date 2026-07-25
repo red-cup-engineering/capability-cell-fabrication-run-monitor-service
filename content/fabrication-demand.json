@@ -1,0 +1,84 @@
+{
+  "capability": "observe-capability-cell-fabrication-run",
+  "targetPath": "lib/emsenn/services/561-group/services/red-cup-engineering/services/software-development-services-section/services/capability-cell-fabrication-run-monitor-service",
+  "fabricationMission": {
+    "id": "urn:union:fabrication:capability-cell-fabrication-run-monitor-service:2026-07-25",
+    "objective": "Verify that this exact Monitor capability validates and folds one append-only Capability Cell fabrication event trajectory into current run state without analyzing, planning, executing, inventing deadlines, or treating missing observations as zero.",
+    "taskClass": "capability-cell-fabrication-run-monitor-fabrication",
+    "focusPaths": [
+      "src/observe.mjs",
+      "content/schemas/observation-input.schema.json",
+      "content/schemas/observation-output.schema.json",
+      "content/schemas/observation-refusal.schema.json",
+      "content/schemas/observed-run-state.schema.json"
+    ],
+    "writablePaths": [
+      "src/observe.mjs",
+      "src/schemas.mjs",
+      "bin/observe.mjs",
+      "test/observe.test.mjs"
+    ],
+    "readablePaths": [
+      "package.json",
+      "src/observe.mjs",
+      "src/schemas.mjs",
+      "bin/observe.mjs",
+      "test/observe.test.mjs",
+      "content/schemas/observation-input.schema.json",
+      "content/schemas/observation-output.schema.json",
+      "content/schemas/observation-refusal.schema.json",
+      "content/schemas/observed-run-state.schema.json"
+    ],
+    "workType": "software-engineering",
+    "requiredCapabilities": [
+      "software-engineering"
+    ],
+    "verifyCommand": "npm run verify",
+    "acceptanceCommand": "npm run verify",
+    "constraints": [
+      "Monitor only: do not analyze, plan, execute, or mutate",
+      "Validate exact event identity, sequence, predecessor, run, and stage order",
+      "Do not impose a universal event count, byte, token, or completion-time ceiling",
+      "Preserve missing observations as absent or unknown, never zero",
+      "Keep stage order supplied by the customer"
+    ],
+    "testVectors": [
+      {
+        "id": "causal-fabrication-observation",
+        "given": [
+          "one declared stage order",
+          "one causally exact append-only event trajectory"
+        ],
+        "when": "the monitor folds the trajectory",
+        "then": [
+          "current stage, obstruction, hired cells, and result are derived",
+          "a completed retry supersedes its earlier obstruction"
+        ],
+        "forbidden": [
+          "mutation",
+          "analysis",
+          "planning",
+          "execution",
+          "event-count ceiling"
+        ]
+      }
+    ]
+  },
+  "providers": {
+    "softwareMissionAgentCard": "https://bare-cedar-fog.561.group/a2a/software-mission-execution/.well-known/agent-card.json"
+  },
+  "package": {
+    "name": "@red-cup-engineering/capability-cell-fabrication-run-monitor-service",
+    "version": "0.1.0"
+  },
+  "deploymentProfile": {
+    "chain": {
+      "caip2": "eip155:5615610"
+    }
+  },
+  "faces": {
+    "repository": "https://github.com/red-cup-engineering/capability-cell-fabrication-run-monitor-service",
+    "activityPubOutbox": "https://bare-cedar-fog.561.group/actors/capability-offer-discovery/outbox",
+    "rpc": "http://127.0.0.1:8561"
+  }
+}

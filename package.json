@@ -1,0 +1,40 @@
+{
+  "name": "@red-cup-engineering/capability-cell-fabrication-run-monitor-service",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "description": "Validates and folds one append-only Capability Cell fabrication event trajectory into its current observable state.",
+  "exports": {
+    ".": "./src/observe.mjs",
+    "./schemas": "./src/schemas.mjs"
+  },
+  "bin": {
+    "observe-capability-cell-fabrication-run": "./bin/observe.mjs"
+  },
+  "scripts": {
+    "check": "node --check src/schemas.mjs && node --check src/observe.mjs && node --check bin/observe.mjs",
+    "test": "node --test test/*.test.mjs",
+    "verify": "npm run check && npm test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "x-agentic-metro-enterprise": {
+    "node-id": "capability-cell-fabrication-run-monitor-service",
+    "actor": "urn:ame:capability-cell-fabrication-run-monitor-service",
+    "organizational-kind": "sovereign-monitoring-cell",
+    "owners": [
+      "red-cup-engineering"
+    ],
+    "operation-catalog": {
+      "observe-capability-cell-fabrication-run": {
+        "inputSchema": "content/schemas/observation-input.schema.json",
+        "outputSchema": "content/schemas/observation-output.schema.json",
+        "refusalSchema": "content/schemas/observation-refusal.schema.json",
+        "stateSchema": "content/schemas/observed-run-state.schema.json"
+      }
+    },
+    "admission": "one ordered append-only fabrication event trajectory and its declared stage order",
+    "refusal": "broken event identity, sequence, predecessor, run identity, unknown stage, or any request to analyze, plan, execute, or mutate"
+  }
+}
