@@ -24,9 +24,34 @@ function refuse(code, reason) {
   throw new FabricationRunObservationRefusal(code, reason);
 }
 
+function canonical(value) {
+  if (Array.isArray(value)) return `[${value.map((item) => item === undefined ? "null" : canonical(item)).join(",")}]`;
+  if (value !== null && typeof value === "object") {
+    return `{${Object.keys(value).filter((key) => value[key] !== undefined).sort().map((key) => `${JSON.stringify(key)}:${canonical(value[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
 function eventIdentity(event) {
   const { id: _id, ...body } = event;
-  return `ni:///sha-256;${createHash("sha256").update(JSON.stringify(body)).digest("base64url")}`;
+  return `ni:///sha-256;${createHash("sha256").update(canonical(body)).digest("base64url")}`;
+}
+
+const LEGACY_EVENT_FIELDS = Object.freeze({
+  "demand-submitted": ["type", "demand"],
+  "stage-started": ["type", "stage"],
+  "stage-obstructed": ["type", "stage", "obstruction", "evidence", "hiredCells"],
+  "stage-completed": ["type", "stage", "result", "hiredCells"],
+  "trajectory-learned": ["type", "stage", "knowledge", "hiredCells"],
+  "fabrication-completed": ["type", "cell"],
+});
+
+function legacyEventIdentity(event) {
+  const ordered = {};
+  for (const key of ["run", "sequence", "at", "previous", ...(LEGACY_EVENT_FIELDS[event.type] ?? [])]) {
+    if (Object.hasOwn(event, key)) ordered[key] = event[key];
+  }
+  return `ni:///sha-256;${createHash("sha256").update(JSON.stringify(ordered)).digest("base64url")}`;
 }
 
 function validateRequest(request) {
@@ -52,7 +77,8 @@ function validateTrajectory(request) {
     if (!event || Object.getPrototypeOf(event) !== Object.prototype) {
       refuse("invalid-event", `event ${sequence} is not a plain object`);
     }
-    if (!NI.test(event.id ?? "") || event.id !== eventIdentity(event)) {
+    if (!NI.test(event.id ?? "")
+        || (event.id !== eventIdentity(event) && event.id !== legacyEventIdentity(event))) {
       refuse("event-identity-drift", `event ${sequence} does not carry its exact content identity`);
     }
     if (event.run !== request.run) refuse("foreign-run-event", `event ${sequence} belongs to a different run`);
