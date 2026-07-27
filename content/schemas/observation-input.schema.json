@@ -5,7 +5,7 @@
   "required": ["type", "run", "stages", "events"],
   "properties": {
     "type": { "const": "CapabilityCellFabricationRunObservationRequest" },
-    "run": { "type": "string", "pattern": "^[0-9a-f-]{36}$" },
+    "run": { "type": "string", "pattern": "^(?:[A-Za-z0-9_-]{43}|[0-9a-f-]{36})$" },
     "stages": {
       "type": "array",
       "items": { "type": "string", "minLength": 1 },

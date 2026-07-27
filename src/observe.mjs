@@ -1,8 +1,8 @@
-import { createHash } from "node:crypto";
 import { OBSERVATION_INPUT_SCHEMA } from "./schemas.mjs";
+import { canonicalEventIdentity } from "./event-identity.mjs";
 
 const NI = /^ni:\/\/\/sha-256;[A-Za-z0-9_-]{43}$/u;
-const RUN = /^[0-9a-f-]{36}$/u;
+const RUN = /^(?:[A-Za-z0-9_-]{43}|[0-9a-f-]{36})$/u;
 
 export class FabricationRunObservationRefusal extends Error {
   constructor(code, reason) {
@@ -22,36 +22,6 @@ export class FabricationRunObservationRefusal extends Error {
 
 function refuse(code, reason) {
   throw new FabricationRunObservationRefusal(code, reason);
-}
-
-function canonical(value) {
-  if (Array.isArray(value)) return `[${value.map((item) => item === undefined ? "null" : canonical(item)).join(",")}]`;
-  if (value !== null && typeof value === "object") {
-    return `{${Object.keys(value).filter((key) => value[key] !== undefined).sort().map((key) => `${JSON.stringify(key)}:${canonical(value[key])}`).join(",")}}`;
-  }
-  return JSON.stringify(value);
-}
-
-function eventIdentity(event) {
-  const { id: _id, ...body } = event;
-  return `ni:///sha-256;${createHash("sha256").update(canonical(body)).digest("base64url")}`;
-}
-
-const LEGACY_EVENT_FIELDS = Object.freeze({
-  "demand-submitted": ["type", "demand"],
-  "stage-started": ["type", "stage"],
-  "stage-obstructed": ["type", "stage", "obstruction", "evidence", "hiredCells"],
-  "stage-completed": ["type", "stage", "result", "hiredCells"],
-  "trajectory-learned": ["type", "stage", "knowledge", "hiredCells"],
-  "fabrication-completed": ["type", "cell"],
-});
-
-function legacyEventIdentity(event) {
-  const ordered = {};
-  for (const key of ["run", "sequence", "at", "previous", ...(LEGACY_EVENT_FIELDS[event.type] ?? [])]) {
-    if (Object.hasOwn(event, key)) ordered[key] = event[key];
-  }
-  return `ni:///sha-256;${createHash("sha256").update(JSON.stringify(ordered)).digest("base64url")}`;
 }
 
 function validateRequest(request) {
@@ -77,8 +47,7 @@ function validateTrajectory(request) {
     if (!event || Object.getPrototypeOf(event) !== Object.prototype) {
       refuse("invalid-event", `event ${sequence} is not a plain object`);
     }
-    if (!NI.test(event.id ?? "")
-        || (event.id !== eventIdentity(event) && event.id !== legacyEventIdentity(event))) {
+    if (!NI.test(event.id ?? "") || event.id !== canonicalEventIdentity(event)) {
       refuse("event-identity-drift", `event ${sequence} does not carry its exact content identity`);
     }
     if (event.run !== request.run) refuse("foreign-run-event", `event ${sequence} belongs to a different run`);
@@ -102,16 +71,20 @@ export function observeCapabilityCellFabricationRun(request) {
   const completedSet = new Set(events
     .filter((event) => event.type === "stage-completed")
     .map((event) => event.stage));
-  const obstruction = [...events].reverse()
-    .find((event) => event.type === "stage-obstructed" && !completedSet.has(event.stage)) ?? null;
+  const currentStage = stages.find((stage) => !completedSet.has(stage)) ?? null;
+  const currentStageEvent = currentStage === null ? null : [...events].reverse()
+    .find((event) => event.stage === currentStage
+      && ["stage-started", "stage-deferred", "stage-obstructed"].includes(event.type)) ?? null;
+  const obstruction = currentStageEvent?.type === "stage-obstructed" ? currentStageEvent : null;
   const result = [...events].reverse()
     .find((event) => event.type === "fabrication-completed")?.cell ?? null;
   const state = {
     id: request.run,
-    status: result ? "completed" : obstruction ? "obstructed" : "ready",
+    status: result ? "completed" : obstruction ? "obstructed"
+      : currentStageEvent?.type === "stage-started" ? "working" : "ready",
     demand,
     completed: stages.filter((stage) => completedSet.has(stage)),
-    currentStage: stages.find((stage) => !completedSet.has(stage)) ?? null,
+    currentStage,
     obstruction,
     hiredCells: [...new Set(events.flatMap((event) => event.hiredCells ?? []))],
     result,

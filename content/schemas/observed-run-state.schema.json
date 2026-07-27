@@ -5,7 +5,7 @@
   "required": ["id", "status", "demand", "completed", "currentStage", "obstruction", "hiredCells", "result", "eventHead", "eventCount", "events"],
   "properties": {
     "id": { "type": "string" },
-    "status": { "enum": ["ready", "obstructed", "completed"] },
+    "status": { "enum": ["ready", "working", "obstructed", "completed"] },
     "demand": {},
     "completed": { "type": "array", "items": { "type": "string" } },
     "currentStage": { "type": ["string", "null"] },

@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import test from "node:test";
 import { Message, Role } from "@a2a-js/sdk";
 import {
@@ -11,6 +10,7 @@ import {
   semanticBytes,
 } from "@emsenn/rmn-semantic-conformance";
 import { executeA2aMessage } from "../src/a2a-executor.mjs";
+import { canonicalEventIdentity } from "../src/event-identity.mjs";
 
 test("the A2A face invokes the same Monitor executable through exact RMN bytes", async () => {
   const run = "11111111-1111-4111-8111-111111111111";
@@ -27,7 +27,7 @@ test("the A2A face invokes the same Monitor executable through exact RMN bytes",
     run,
     stages: ["extract", "plan", "execute"],
     events: [{
-      id: `ni:///sha-256;${createHash("sha256").update(JSON.stringify(body)).digest("base64url")}`,
+      id: canonicalEventIdentity(body),
       ...body,
     }],
   };
