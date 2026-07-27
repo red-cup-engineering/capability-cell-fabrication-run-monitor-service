@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { semanticId } from "@emsenn/rmn-semantic-conformance";
-import { relationalRwilDocument } from "@emsenn/rwil-rdf-services/client";
+import { semanticId } from "@red-cup-engineering/rmn-semantic-conformance";
+import { relationalRwilDocument } from "@lenticule-science/rwil-rdf-projection-service/client";
 import {
   FabricationRunObservationRefusal,
   observeCapabilityCellFabricationRun,

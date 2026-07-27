@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { compileRmlLaw } from "@emsenn/rmn-semantic-conformance/law";
+import { compileRmlLaw } from "@red-cup-engineering/rmn-semantic-conformance/law";
 
 export const CAPABILITY_CELL_FABRICATION_RUN_OBSERVATION_LAW = compileRmlLaw(
   readFileSync(

@@ -1,5 +1,5 @@
-import { semanticBytes, semanticId } from "@emsenn/rmn-semantic-conformance";
-import { relationalRwilDocument } from "@emsenn/rwil-rdf-services/client";
+import { semanticBytes, semanticId } from "@red-cup-engineering/rmn-semantic-conformance";
+import { relationalRwilDocument } from "@lenticule-science/rwil-rdf-projection-service/client";
 
 export function canonicalEventCarrier(value) {
   const { id: _id, ...body } = value;

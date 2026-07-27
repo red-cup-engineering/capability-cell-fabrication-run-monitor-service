@@ -4,11 +4,11 @@ import { Message, Role } from "@a2a-js/sdk";
 import {
   extractRmnPart,
   userRmnMessage,
-} from "@emsenn/a2a-rmn-part-service";
+} from "@red-cup-engineering/a2a-rmn-part-service";
 import {
   decodeSemantic,
   semanticBytes,
-} from "@emsenn/rmn-semantic-conformance";
+} from "@red-cup-engineering/rmn-semantic-conformance";
 import { executeA2aMessage } from "../src/a2a-executor.mjs";
 import { canonicalEventIdentity } from "../src/event-identity.mjs";
 
