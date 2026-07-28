@@ -19,7 +19,7 @@ Environment=X402_ASSET=0x610178dA211FEF7D417bC0e6FeD39F05609AD788
 Environment="X402_ASSET_NAME=Union Integration Credit"
 Environment=X402_ASSET_VERSION=1
 Environment=X402_RECEIPT_PATH=/home/emsenn/info/lib/emsenn/services/561-group/services/red-cup-engineering/services/software-development-services-section/services/capability-cell-fabrication-run-monitor-service/data/x402/receipts.jsonl
-ExecStart=/home/emsenn/.config/nvm/versions/node/v24.13.1/bin/node /home/emsenn/info/lib/emsenn/services/561-group/services/red-cup-engineering/services/union-platform-node-fabrication-services-section/node_modules/@red-cup-engineering/capability-cell-fabrication-run-monitor-service/bin/x402-server.mjs
+ExecStart=/home/emsenn/.config/nvm/versions/node/v24.13.1/bin/node /home/emsenn/info/lib/emsenn/services/board-of-directors/services/executive-office/services/union-platform-node-fabrication-services-section/node_modules/@red-cup-engineering/capability-cell-fabrication-run-monitor-service/bin/x402-server.mjs
 Restart=always
 RestartSec=2
 NoNewPrivileges=true

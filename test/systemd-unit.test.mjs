@@ -21,7 +21,7 @@ test("deployed HTTP faces execute the providers already installed by the hiring 
       import.meta.url,
     ), "utf8"),
   ]);
-  const installedRoot = "/union-platform-node-fabrication-services-section/node_modules/@red-cup-engineering/";
+  const installedRoot = "/board-of-directors/services/executive-office/services/union-platform-node-fabrication-services-section/node_modules/@red-cup-engineering/";
   assert.match(x402, new RegExp(`${installedRoot}capability-cell-fabrication-run-monitor-service/bin/x402-server\\.mjs`));
   assert.match(x402, /X402_FACILITATOR_URL=http:\/\/127\.0\.0\.1:18893\/x402\/facilitator/u);
   assert.doesNotMatch(x402, /X402_FACILITATOR_URL=http:\/\/127\.0\.0\.1:18893\s/u);
