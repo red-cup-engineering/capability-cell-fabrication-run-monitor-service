@@ -1,6 +1,6 @@
 {
   "capability": "observe-capability-cell-fabrication-run",
-  "targetPath": "lib/emsenn/services/561-group/services/red-cup-engineering/services/software-development-services-section/services/capability-cell-fabrication-run-monitor-service",
+  "targetPath": "lib/emsenn/services/561-group/services/red-cup-engineering/services/software-services-section/services/capability-cell-fabrication-run-monitor-service",
   "fabricationMission": {
     "id": "urn:union:fabrication:capability-cell-fabrication-run-monitor-service:2026-07-25",
     "objective": "Verify that this exact Monitor capability validates and folds one append-only Capability Cell fabrication event trajectory into current run state without analyzing, planning, executing, inventing deadlines, or treating missing observations as zero.",
