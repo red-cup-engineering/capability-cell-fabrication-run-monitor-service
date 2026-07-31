@@ -12,12 +12,12 @@
     "./schemas": "./src/schemas.mjs"
   },
   "bin": {
-    "observe-capability-cell-fabrication-run": "./bin/observe.mjs",
-    "execute-capability-cell-fabrication-run-observation-a2a-message": "./bin/execute-a2a-message.mjs",
-    "serve-capability-cell-fabrication-run-observation-seller": "./bin/x402-server.mjs"
+    "observe-capability-cell-fabrication-run": "./scripts/observe.mjs",
+    "execute-capability-cell-fabrication-run-observation-a2a-message": "./scripts/execute-a2a-message.mjs",
+    "serve-capability-cell-fabrication-run-observation-seller": "./scripts/x402-server.mjs"
   },
   "scripts": {
-    "check": "node --check src/schemas.mjs && node --check src/law.mjs && node --check src/event-identity.mjs && node --check src/observe.mjs && node --check src/a2a-executor.mjs && node --check bin/observe.mjs && node --check bin/execute-a2a-message.mjs && node --check bin/x402-server.mjs",
+    "check": "node --check src/schemas.mjs && node --check src/law.mjs && node --check src/event-identity.mjs && node --check src/observe.mjs && node --check src/a2a-executor.mjs && node --check scripts/observe.mjs && node --check scripts/execute-a2a-message.mjs && node --check scripts/x402-server.mjs",
     "test": "node --test test/*.test.mjs",
     "verify": "npm run check && npm test"
   },
@@ -30,7 +30,7 @@
     "@red-cup-engineering/a2a-rmn-part-service": "1.0.0",
     "@red-cup-engineering/activitypub-services-section": "1.0.2",
     "@red-cup-engineering/rmn-semantic-conformance": "6.0.1",
-    "@lenticule-science/rwil-rdf-projection-service": "1.0.2",
+    "@lenticule-science/witness-journal-rdf-projection-service": "1.0.2",
     "@red-cup-engineering/x402-services-section": "1.2.0",
     "express": "5.2.1"
   }
