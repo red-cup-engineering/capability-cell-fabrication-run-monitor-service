@@ -28,46 +28,10 @@
     "@a2a-js/sdk": "1.0.0-beta.0",
     "@red-cup-engineering/a2a-contracted-agent-service": "2.0.4",
     "@red-cup-engineering/a2a-rmn-part-service": "1.0.0",
-    "@red-cup-engineering/activitypub-services-section": "1.0.0",
-    "@red-cup-engineering/rmn-semantic-conformance": "6.0.0",
+    "@red-cup-engineering/activitypub-services-section": "1.0.2",
+    "@red-cup-engineering/rmn-semantic-conformance": "6.0.1",
     "@lenticule-science/rwil-rdf-projection-service": "1.0.2",
     "@red-cup-engineering/x402-services-section": "1.2.0",
     "express": "5.2.1"
-  },
-  "x-agentic-metro-enterprise": {
-    "node-id": "capability-cell-fabrication-run-monitor-service",
-    "actor": "urn:ame:capability-cell-fabrication-run-monitor-service",
-    "organizational-kind": "sovereign-monitoring-cell",
-    "owners": [
-      "red-cup-engineering"
-    ],
-    "operation-catalog": {
-      "observe-capability-cell-fabrication-run": {
-        "inputSchema": "content/schemas/observation-input.schema.json",
-        "outputSchema": "content/schemas/observation-output.schema.json",
-        "refusalSchema": "content/schemas/observation-refusal.schema.json",
-        "stateSchema": "content/schemas/observed-run-state.schema.json"
-      }
-    },
-    "admission": "one ordered append-only fabrication event trajectory and its declared stage order",
-    "refusal": "broken event identity, sequence, predecessor, run identity, unknown stage, or any request to analyze, plan, execute, or mutate"
-  },
-  "x-semiotic-voxel": {
-    "profile": "org.harmonious-union.semiotic-voxel.v1",
-    "owner": "red-cup-engineering",
-    "kind": "capability-cell",
-    "actor": "urn:ame:capability-cell-fabrication-run-monitor-service",
-    "operations": [
-      "observe-capability-cell-fabrication-run"
-    ],
-    "capabilities": [
-      {
-        "capability": "capability-cell-fabrication-run-monitor-service",
-        "faces": [
-          "observe-capability-cell-fabrication-run"
-        ]
-      }
-    ],
-    "package": "@red-cup-engineering/capability-cell-fabrication-run-monitor-service"
   }
 }
