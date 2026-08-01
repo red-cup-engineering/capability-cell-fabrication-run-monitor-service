@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { semanticId } from "@red-cup-engineering/rmn-semantic-conformance";
-import { relationalRwilDocument } from "@lenticule-science/witness-journal-rdf-projection-service/client";
+import { relationalWitnessJournalDocument } from "@lenticule-science/witness-journal-rdf-projection-service/client";
 import {
   FabricationRunObservationRefusal,
   observeCapabilityCellFabricationRun,
@@ -40,7 +40,7 @@ test("event identity is the canonical relational RMN identity of its id-free bod
     type: "demand-submitted",
     demand: { capability: "toast-bread" },
   };
-  assert.equal(canonicalEventIdentity(body), semanticId(relationalRwilDocument(body)));
+  assert.equal(canonicalEventIdentity(body), semanticId(relationalWitnessJournalDocument(body)));
 });
 
 test("folds one causally exact trajectory into current monitoring state", () => {
