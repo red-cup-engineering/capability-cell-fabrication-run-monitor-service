@@ -1,6 +1,6 @@
 {
   "name": "@red-cup-engineering/capability-cell-fabrication-run-monitor-service",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "type": "module",
   "description": "Validates and folds one append-only Capability Cell fabrication event trajectory into its current observable state.",
@@ -26,12 +26,12 @@
   },
   "dependencies": {
     "@a2a-js/sdk": "1.0.0-beta.0",
-    "@red-cup-engineering/a2a-contracted-agent-service": "2.0.4",
-    "@red-cup-engineering/a2a-rmn-part-service": "1.0.0",
+    "@red-cup-engineering/a2a-contracted-agent-service": "2.0.5",
+    "@red-cup-engineering/a2a-rmn-part-service": "1.0.1",
     "@red-cup-engineering/activitypub-services-section": "1.0.2",
-    "@red-cup-engineering/rmn-semantic-conformance": "6.0.1",
-    "@lenticule-science/witness-journal-rdf-projection-service": "1.0.2",
-    "@red-cup-engineering/x402-services-section": "1.2.0",
+    "@red-cup-engineering/rmn-semantic-conformance": "6.0.2",
+    "@lenticule-science/witness-journal-rdf-projection-service": "1.0.3",
+    "@red-cup-engineering/x402-services-section": "1.2.1",
     "express": "5.2.1"
   }
 }
