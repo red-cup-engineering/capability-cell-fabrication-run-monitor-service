@@ -8,7 +8,6 @@
     ".": "./src/observe.mjs",
     "./a2a-executor": "./src/a2a-executor.mjs",
     "./event-identity": "./src/event-identity.mjs",
-    "./law": "./src/law.mjs",
     "./schemas": "./src/schemas.mjs"
   },
   "bin": {
@@ -17,7 +16,7 @@
     "serve-capability-cell-fabrication-run-observation-seller": "./scripts/x402-server.mjs"
   },
   "scripts": {
-    "check": "node --check src/schemas.mjs && node --check src/law.mjs && node --check src/event-identity.mjs && node --check src/observe.mjs && node --check src/a2a-executor.mjs && node --check scripts/observe.mjs && node --check scripts/execute-a2a-message.mjs && node --check scripts/x402-server.mjs",
+    "check": "node --check src/schemas.mjs && node --check src/event-identity.mjs && node --check src/observe.mjs && node --check src/a2a-executor.mjs && node --check scripts/observe.mjs && node --check scripts/execute-a2a-message.mjs && node --check scripts/x402-server.mjs",
     "test": "node --test test/*.test.mjs",
     "verify": "npm run check && npm test"
   },
