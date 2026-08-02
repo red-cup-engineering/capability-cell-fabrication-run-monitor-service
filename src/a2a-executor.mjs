@@ -4,7 +4,7 @@ import {
   decodeSemantic,
   semanticBytes,
   semanticId,
-} from "@red-cup-engineering/rmn-semantic-conformance";
+} from "@red-cup-engineering/relation-model-notation-runtime";
 import { observeCapabilityCellFabricationRun } from "./observe.mjs";
 
 export const ACTOR = "urn:ame:capability-cell-fabrication-run-monitor-service";

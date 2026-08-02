@@ -8,7 +8,7 @@ import {
 import {
   decodeSemantic,
   semanticBytes,
-} from "@red-cup-engineering/rmn-semantic-conformance";
+} from "@red-cup-engineering/relation-model-notation-runtime";
 import { executeA2aMessage } from "../src/a2a-executor.mjs";
 import { canonicalEventIdentity } from "../src/event-identity.mjs";
 

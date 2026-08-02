@@ -1,5 +1,5 @@
-import { semanticBytes, semanticId } from "@red-cup-engineering/rmn-semantic-conformance";
-import { relationalWitnessJournalDocument } from "@lenticule-science/witness-journal-rdf-projection-service/client";
+import { semanticBytes, semanticId } from "@red-cup-engineering/relation-model-notation-runtime";
+import { relationalWitnessJournalDocument } from "@red-cup-engineering/witness-journal-rdf-projection-service/client";
 
 export function canonicalEventCarrier(value) {
   const { id: _id, ...body } = value;
