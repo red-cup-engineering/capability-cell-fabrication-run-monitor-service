@@ -1,0 +1,28 @@
+{
+  "profile": "org.emsenn.evm.sovereign-enterprise-account.v3",
+  "enterprise": {
+    "nodeId": "capability-cell-fabrication-run-monitor-service",
+    "urn": "urn:ame:capability-cell-fabrication-run-monitor-service",
+    "enterpriseId": "0x80cb5c3c95cb7c903deb866f551fbcf80833e0d758459dac48e7f4bb7855a048"
+  },
+  "chain": {
+    "chainId": 5615610,
+    "caip2": "eip155:5615610"
+  },
+  "account": {
+    "address": "0x942a3d0184e806cdbfd011e008423239413fd8b8",
+    "caip10": "eip155:5615610:0x942a3d0184e806cdbfd011e008423239413fd8b8"
+  },
+  "factory": {
+    "address": "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
+    "userSalt": "0x1994591d323a8f3ed2576cfb967590094f3eb8af7fde8ed18a8b609ce5c5650a"
+  },
+  "policy": {
+    "signer": "0x99467036d0c29b39cc0e24cc2cd92e82bd8f15b8",
+    "custody": "settlement-private"
+  },
+  "deployment": {
+    "transaction": "0x51d22d964dd295c9930a05d54255d264a828b9c5b05c6994115e1febd195b2d1",
+    "block": 46
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "ni:///sha-256;oAR8qeKpGXnzzELI7Y-orJBjfV0Rq-tt4yZ78EP6OeQ",
+  "type": "StockKeepingUnit",
+  "schema": "urn:emsenn:schema:stock-keeping-unit:2026-07-24",
+  "sku": "capability-cell-fabrication-run-monitor-service.observe-capability-cell-fabrication-run.observe-capability-cell-fabrication-run.g6Wj_mf2",
+  "producer": {
+    "actor": "urn:ame:capability-cell-fabrication-run-monitor-service",
+    "nodeId": "capability-cell-fabrication-run-monitor-service"
+  },
+  "product": {
+    "name": "Capability Cell fabrication-run observation",
+    "kind": "service-invocation",
+    "contract": {
+      "id": "observe-capability-cell-fabrication-run",
+      "law": "ni:///sha-256;g6Wj_mf2wWZlaWYhLAnCeULQn_iAYGQY4GjIXqXAdAk"
+    },
+    "operation": "observe-capability-cell-fabrication-run",
+    "description": "Validate and fold one append-only Capability Cell fabrication trajectory into its current observable state without analyzing, planning, executing, or mutating it."
+  },
+  "denominations": [
+    "union-integration-credit-atomic-v1"
+  ],
+  "pricing": {
+    "intrinsicPrice": null,
+    "priceFormation": "counterparty-border-offer"
+  }
+}

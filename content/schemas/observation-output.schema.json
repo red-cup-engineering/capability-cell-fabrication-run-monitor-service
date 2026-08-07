@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:red-cup-engineering:schema:capability-cell-fabrication-run-observation-output:v1",
+  "type": "object",
+  "required": ["type", "state"],
+  "properties": {
+    "type": { "const": "CapabilityCellFabricationRunObservation" },
+    "state": { "$ref": "observed-run-state.schema.json" }
+  },
+  "additionalProperties": false
+}

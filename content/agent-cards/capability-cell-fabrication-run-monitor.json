@@ -1,0 +1,59 @@
+{
+  "name": "Capability Cell Fabrication Run Monitor",
+  "description": "Validates and folds one append-only Capability Cell fabrication event trajectory into its current observable state.",
+  "supportedInterfaces": [
+    {
+      "url": "${BASE_URL}/a2a/jsonrpc",
+      "protocolBinding": "JSONRPC",
+      "tenant": "",
+      "protocolVersion": "1.0"
+    },
+    {
+      "url": "${BASE_URL}/a2a/rest",
+      "protocolBinding": "HTTP+JSON",
+      "tenant": "",
+      "protocolVersion": "1.0"
+    }
+  ],
+  "provider": {
+    "url": "https://github.com/red-cup-engineering",
+    "organization": "Red Cup Engineering"
+  },
+  "version": "0.1.0",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "extensions": [
+      {
+        "uri": "ni:///sha-256;PJGdh3bPbCSjQcciOwe5zau_pGjHia6Rn4olpBlHWk4",
+        "description": "Capability Cell identity binding",
+        "required": false,
+        "params": {
+          "profile": "org.emsenn.capability-cell-identity-binding.v1",
+          "cell": "ni:///sha-256;-2yKckgFJbDd-l6pMlpeZv7H5yYVZxvWgCkY0o5kZoo",
+          "sku": "ni:///sha-256;oAR8qeKpGXnzzELI7Y-orJBjfV0Rq-tt4yZ78EP6OeQ",
+          "capability": "ni:///sha-256;g6Wj_mf2wWZlaWYhLAnCeULQn_iAYGQY4GjIXqXAdAk",
+          "controller": "did:pkh:eip155:5615610:0x942a3d0184e806cdbfd011e008423239413fd8b8"
+        }
+      }
+    ],
+    "extendedAgentCard": false
+  },
+  "securitySchemes": {},
+  "securityRequirements": [],
+  "defaultInputModes": ["application/rmn+cbor"],
+  "defaultOutputModes": ["application/rmn+cbor"],
+  "skills": [
+    {
+      "id": "observe-capability-cell-fabrication-run",
+      "name": "Observe Capability Cell fabrication run",
+      "description": "Validate and fold one causally linked fabrication trajectory without analyzing, planning, executing, or mutating it.",
+      "tags": ["monitor", "mape-k", "capability-cell", "trajectory"],
+      "examples": [],
+      "inputModes": ["application/rmn+cbor"],
+      "outputModes": ["application/rmn+cbor"],
+      "securityRequirements": []
+    }
+  ],
+  "signatures": []
+}

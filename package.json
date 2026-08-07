@@ -1,0 +1,36 @@
+{
+  "name": "@red-cup-engineering/capability-cell-fabrication-run-monitor-service",
+  "version": "0.1.1",
+  "private": false,
+  "type": "module",
+  "description": "Validates and folds one append-only Capability Cell fabrication event trajectory into its current observable state.",
+  "exports": {
+    ".": "./src/observe.mjs",
+    "./a2a-executor": "./src/a2a-executor.mjs",
+    "./event-identity": "./src/event-identity.mjs",
+    "./schemas": "./src/schemas.mjs"
+  },
+  "bin": {
+    "observe-capability-cell-fabrication-run": "./scripts/observe.mjs",
+    "execute-capability-cell-fabrication-run-observation-a2a-message": "./scripts/execute-a2a-message.mjs",
+    "serve-capability-cell-fabrication-run-observation-seller": "./scripts/x402-server.mjs"
+  },
+  "scripts": {
+    "check": "node --check src/schemas.mjs && node --check src/event-identity.mjs && node --check src/observe.mjs && node --check src/a2a-executor.mjs && node --check scripts/observe.mjs && node --check scripts/execute-a2a-message.mjs && node --check scripts/x402-server.mjs",
+    "test": "node --test test/*.test.mjs",
+    "verify": "npm run check && npm test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@a2a-js/sdk": "1.0.0-beta.0",
+    "@red-cup-engineering/a2a-contracted-agent-service": "2.0.5",
+    "@red-cup-engineering/a2a-rmn-part-service": "1.0.1",
+    "@red-cup-engineering/activitypub-services-section": "1.0.2",
+    "@red-cup-engineering/relation-model-notation-runtime": "7.0.0",
+    "@red-cup-engineering/witness-journal-rdf-projection-service": "1.1.0",
+    "@red-cup-engineering/x402-services-section": "1.2.1",
+    "express": "5.2.1"
+  }
+}
