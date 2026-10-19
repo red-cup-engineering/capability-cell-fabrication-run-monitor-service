@@ -170,3 +170,65 @@ test("stage transitions after completion refuse instead of contradicting complet
       && error.code === "post-completion-stage-event",
   );
 });
+
+test("cannot reopen a completed stage with a later started, deferred, or obstructed event", () => {
+  for (const type of ["stage-started", "stage-deferred", "stage-obstructed"]) {
+    const events = [];
+    events.push(event(0, { type: "demand-submitted" }, events));
+    events.push(event(1, { type: "stage-completed", stage: "extract" }, events));
+    events.push(event(2, { type, stage: "extract" }, events));
+    assert.throws(
+      () => observeCapabilityCellFabricationRun(request(events)),
+      (error) => error instanceof FabricationRunObservationRefusal
+        && error.code === "completed-stage-transition",
+    );
+  }
+});
+
+test("stage status cannot be emitted without naming the actual stage", () => {
+  for (const type of ["stage-started", "stage-deferred", "stage-obstructed"]) {
+    const events = [];
+    events.push(event(0, { type: "demand-submitted" }, events));
+    events.push(event(1, { type }, events));
+    assert.throws(
+      () => observeCapabilityCellFabricationRun(request(events)),
+      (error) => error instanceof FabricationRunObservationRefusal
+        && error.code === "missing-stage",
+    );
+  }
+});
+
+test("RFC 3339 calendar validity refuses normalized impossible observation dates", () => {
+  const events = [event(0, { type: "demand-submitted", at: "2026-02-30T00:00:00Z" })];
+  assert.throws(
+    () => observeCapabilityCellFabricationRun(request(events)),
+    (error) => error instanceof FabricationRunObservationRefusal
+      && error.code === "invalid-event-time",
+  );
+  const leapDay = [event(0, { type: "demand-submitted", at: "2024-02-29T23:59:59Z" })];
+  assert.equal(observeCapabilityCellFabricationRun(request(leapDay)).state.lastEventAt, leapDay[0].at);
+});
+
+test("sub-millisecond timestamp regression cannot be misreported as monotone", () => {
+  const events = [];
+  events.push(event(0, { type: "demand-submitted", at: "2026-07-25T00:00:00.000900Z" }, events));
+  events.push(event(1, { type: "customer-invocation-recovered",
+    at: "2026-07-25T00:00:00.000100Z" }, events));
+  assert.throws(
+    () => observeCapabilityCellFabricationRun(request(events)),
+    (error) => error instanceof FabricationRunObservationRefusal
+      && error.code === "event-time-regression",
+  );
+});
+
+test("equal and increasing instants retain precision across valid RFC 3339 offsets", () => {
+  const events = [];
+  events.push(event(0, { type: "demand-submitted", at: "2026-07-25T01:00:00.000100+01:00" }, events));
+  events.push(event(1, { type: "customer-invocation-recovered",
+    at: "2026-07-25T00:00:00.0001000Z" }, events));
+  events.push(event(2, { type: "customer-invocation-recovered",
+    at: "2026-07-25T00:00:00.000101Z" }, events));
+  const observed = observeCapabilityCellFabricationRun(request(events));
+  assert.equal(observed.state.eventCount, 3);
+  assert.equal(observed.state.lastEventAt, events.at(-1).at);
+});
