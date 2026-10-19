@@ -41,3 +41,36 @@ test("the A2A face invokes the same Monitor executable through exact RMN bytes",
   assert.equal(result.state.currentStage, "extract");
   assert.equal(result.state.eventCount, 1);
 });
+
+test("A2A delivers a typed refusal to the native receiver when a fabricated completion precedes stages", async () => {
+  const run = "11111111-1111-4111-8111-111111111111";
+  const first = {
+    run,
+    sequence: 0,
+    at: "2026-07-25T00:00:00.000Z",
+    previous: null,
+    type: "demand-submitted",
+    demand: { capability: "toast-bread" },
+  };
+  const original = { id: canonicalEventIdentity(first), ...first };
+  const premature = {
+    run,
+    sequence: 1,
+    at: "2026-07-25T00:00:01.000Z",
+    previous: original.id,
+    type: "fabrication-completed",
+    cell: { id: "urn:cell:never-built" },
+  };
+  const message = Message.fromJSON(await executeA2aMessage(
+    userRmnMessage(semanticBytes({
+      type: "CapabilityCellFabricationRunObservationRequest",
+      run,
+      stages: ["extract", "plan", "execute"],
+      events: [original, { id: canonicalEventIdentity(premature), ...premature }],
+    })),
+  ));
+  assert.equal(message.role, Role.ROLE_AGENT);
+  const result = decodeSemantic(extractRmnPart(message.parts).bytes);
+  assert.equal(result.type, "CapabilityCellFabricationRunObservationRefusal");
+  assert.equal(result.code, "premature-fabrication-completion");
+});
