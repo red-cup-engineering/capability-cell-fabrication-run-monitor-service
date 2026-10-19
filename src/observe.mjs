@@ -45,6 +45,7 @@ function validateRequest(request) {
 function validateTrajectory(request) {
   let previous = null;
   let previousTime = -Infinity;
+  let previousFractionalTail = "";
   const completedStages = new Set();
   let fabricationFinished = false;
   for (const [sequence, event] of request.events.entries()) {
@@ -63,8 +64,30 @@ function validateTrajectory(request) {
     if (typeof event.at !== "string" || !RFC3339.test(event.at) || !Number.isFinite(Date.parse(event.at))) {
       refuse("invalid-event-time", `event ${sequence} must carry an RFC 3339 observation time`);
     }
+    // Date.parse alone accepts normalized impossible dates (e.g. February 30)
+    // and discards precision beyond milliseconds. Neither is admissible as a
+    // source-event observation, whose original RFC 3339 timestamp is kept.
+    const year = Number(event.at.slice(0, 4));
+    const month = Number(event.at.slice(5, 7));
+    const day = Number(event.at.slice(8, 10));
+    const calendar = new Date(0);
+    calendar.setUTCFullYear(year, month - 1, day);
+    if (calendar.getUTCFullYear() !== year ||
+        calendar.getUTCMonth() !== month - 1 || calendar.getUTCDate() !== day) {
+      refuse("invalid-event-time", `event ${sequence} names a nonexistent calendar date`);
+    }
     const eventTime = Date.parse(event.at);
-    if (eventTime < previousTime) {
+    // RFC 3339 permits sub-millisecond fractional seconds. The UTC epoch
+    // millisecond covers time zones; compare remaining fractional digits
+    // only when that epoch millisecond is equal. Trimming trailing zeroes
+    // preserves equal instants written at different declared precision.
+    const fraction = /\.(\d+)/u.exec(event.at)?.[1] ?? "";
+    const fractionalTail = fraction.slice(3).replace(/0+$/u, "");
+    const fractionalWidth = Math.max(fractionalTail.length, previousFractionalTail.length);
+    if (eventTime < previousTime ||
+        (eventTime === previousTime &&
+          fractionalTail.padEnd(fractionalWidth, "0") <
+          previousFractionalTail.padEnd(fractionalWidth, "0"))) {
       refuse("event-time-regression", `event ${sequence} precedes the previous observation time`);
     }
     if (event.stage !== undefined && !request.stages.includes(event.stage)) {
@@ -72,6 +95,14 @@ function validateTrajectory(request) {
     }
     if (fabricationFinished && ["stage-started", "stage-deferred", "stage-obstructed", "stage-completed"].includes(event.type)) {
       refuse("post-completion-stage-event", `event ${sequence} changes a stage after fabrication completed`);
+    }
+    if (["stage-started", "stage-deferred", "stage-obstructed"].includes(event.type)) {
+      if (event.stage === undefined) {
+        refuse("missing-stage", `event ${sequence} changes a stage without identifying it`);
+      }
+      if (completedStages.has(event.stage)) {
+        refuse("completed-stage-transition", `event ${sequence} reopens an already completed stage`);
+      }
     }
     if (event.type === "stage-completed") {
       const nextStage = request.stages.find((stage) => !completedStages.has(stage));
@@ -88,6 +119,7 @@ function validateTrajectory(request) {
       fabricationFinished = true;
     }
     previousTime = eventTime;
+    previousFractionalTail = fractionalTail;
     previous = event.id;
   }
 }
