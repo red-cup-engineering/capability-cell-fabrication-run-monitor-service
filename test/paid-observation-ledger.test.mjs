@@ -53,6 +53,8 @@ test("retain persists the exact signed request before it becomes observable or s
   assert.deepEqual(events, ["append-start", "append-finished"]);
   assert.equal(intents.get(INVOCATION).request.run, "signed-one");
   assert.equal(ledger.read(INVOCATION).status, 202);
+  assert.equal(ledger.read(INVOCATION).body.status, "intent-recorded");
+  assert.equal(ledger.read(INVOCATION).body.settlement, "unobserved");
 });
 
 test("one invocation cannot change body on retry or concurrent signed requests", async () => {
@@ -87,7 +89,10 @@ test("concurrent settlement executes exactly once and only claims terminal after
   const a = ledger.settle(EVIDENCE);
   const b = ledger.settle(EVIDENCE);
   assert.equal(ledger.read(INVOCATION).status, 202);
-  while (releaseTerminal === undefined) await new Promise((resolve) => setImmediate(resolve));
+  for (let attempt = 0; attempt < 10 && releaseTerminal === undefined; attempt++) {
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+  assert.equal(typeof releaseTerminal, "function", "terminal append was not reached");
   releaseTerminal();
   const [first, second] = await Promise.all([a, b]);
   assert.deepEqual(first, second);
