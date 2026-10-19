@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { appendFile, mkdir, readFile } from "node:fs/promises";
-import { dirname } from "node:path";
+import { readFile } from "node:fs/promises";
+import { appendReceipt, receiptState } from "../src/paid-observation-journal.mjs";
 import { createPaidObservationLedger } from "../src/paid-observation-ledger.mjs";
 import express from "express";
 import {
@@ -36,33 +36,6 @@ async function quote() {
     throw new Error("x402 requires a positive integer number of atomic settlement units");
   }
   return Object.freeze({ result: body.result, atomicAmount: amount.numerator });
-}
-
-async function appendReceipt(path, record) {
-  await mkdir(dirname(path), { recursive: true });
-  await appendFile(path, `${JSON.stringify(record)}\n`, { encoding: "utf8", mode: 0o600 });
-}
-
-async function receiptState(path) {
-  let source;
-  try {
-    source = await readFile(path, "utf8");
-  } catch (error) {
-    if (error?.code === "ENOENT") return { intents: new Map(), terminals: new Map() };
-    throw error;
-  }
-  const records = source.split("\n").filter(Boolean).map((line) => JSON.parse(line));
-  return {
-    intents: new Map(records
-      .filter((record) => record?.type === "X402PaidFabricationRunObservationIntent")
-      .map((record) => [record.invocation, record])),
-    terminals: new Map(records
-      .filter((record) => [
-        "X402PaidFabricationRunObservationReceipt",
-        "X402PaidFabricationRunObservationRefusal",
-      ].includes(record?.type))
-      .map((record) => [record.invocation, record])),
-  };
 }
 
 export async function main() {
