@@ -5,7 +5,7 @@ import {
   semanticBytes,
   semanticId,
 } from "@red-cup-engineering/relation-model-notation-runtime";
-import { observeCapabilityCellFabricationRun } from "./observe.mjs";
+import { FabricationRunObservationRefusal, observeCapabilityCellFabricationRun } from "./observe.mjs";
 
 export const ACTOR = "urn:ame:capability-cell-fabrication-run-monitor-service";
 
@@ -16,7 +16,15 @@ export async function executeA2aMessage(source, options = {}) {
   }
   const input = extractRmnPart(message.parts);
   const request = decodeSemantic(input.bytes);
-  const result = (options.observe ?? observeCapabilityCellFabricationRun)(request);
+  let result;
+  try {
+    result = await (options.observe ?? observeCapabilityCellFabricationRun)(request);
+  } catch (error) {
+    if (!(error instanceof FabricationRunObservationRefusal)) throw error;
+    // A bad observation is a real, typed monitoring result. Preserve it in
+    // the original A2A/RMN reply rather than dropping it at a transport throw.
+    result = error.toJSON();
+  }
   const outputBytes = semanticBytes(result);
   return Message.toJSON({
     messageId: "",

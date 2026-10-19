@@ -12,6 +12,7 @@
     "obstruction": { "type": ["object", "null"] },
     "hiredCells": { "type": "array", "items": { "type": "string" } },
     "result": { "type": ["object", "null"] },
+    "lastEventAt": { "type": "string", "format": "date-time" },
     "eventHead": { "type": "string" },
     "eventCount": { "type": "integer", "minimum": 1 },
     "events": { "type": "array", "items": { "type": "object" } }

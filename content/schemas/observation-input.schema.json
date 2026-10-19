@@ -21,7 +21,7 @@
           "id": { "type": "string", "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$" },
           "run": { "type": "string" },
           "sequence": { "type": "integer", "minimum": 0 },
-          "at": { "type": "string" },
+          "at": { "type": "string", "format": "date-time" },
           "previous": { "type": ["string", "null"] },
           "type": { "type": "string", "minLength": 1 }
         },

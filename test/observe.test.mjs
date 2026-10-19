@@ -103,3 +103,70 @@ test("refuses a trajectory whose bytes no longer match its event identity", () =
       && error.code === "event-identity-drift",
   );
 });
+
+test("a fabrication-completed claim cannot bypass unfinished stages", () => {
+  const events = [];
+  events.push(event(0, { type: "demand-submitted", demand: { capability: "toast-bread" } }, events));
+  events.push(event(1, { type: "fabrication-completed", cell: { id: "urn:cell:premature" } }, events));
+  assert.throws(
+    () => observeCapabilityCellFabricationRun(request(events)),
+    (error) => error instanceof FabricationRunObservationRefusal
+      && error.code === "premature-fabrication-completion",
+  );
+});
+
+test("the original Monitor reports a genuinely completed ordered run and its last observation time", () => {
+  const events = [];
+  events.push(event(0, { type: "demand-submitted", demand: { capability: "toast-bread" } }, events));
+  for (const stage of stages) {
+    events.push(event(events.length, { type: "stage-completed", stage }, events));
+  }
+  events.push(event(events.length, { type: "fabrication-completed", cell: { id: "urn:cell:real" } }, events));
+  const observation = observeCapabilityCellFabricationRun(request(events));
+  assert.equal(observation.state.status, "completed");
+  assert.deepEqual(observation.state.completed, stages);
+  assert.equal(observation.state.currentStage, null);
+  assert.equal(observation.state.result.id, "urn:cell:real");
+  assert.equal(observation.state.lastEventAt, events.at(-1).at);
+});
+
+test("a duplicated or out-of-order stage completion does not create fake progress", () => {
+  const events = [];
+  events.push(event(0, { type: "demand-submitted" }, events));
+  events.push(event(1, { type: "stage-completed", stage: "plan" }, events));
+  assert.throws(
+    () => observeCapabilityCellFabricationRun(request(events)),
+    (error) => error instanceof FabricationRunObservationRefusal
+      && error.code === "invalid-stage-completion",
+  );
+});
+
+test("a malformed observation time or time regression cannot be used as fresh telemetry", () => {
+  const events = [];
+  events.push(event(0, { type: "demand-submitted" }, events));
+  events.push(event(1, { type: "stage-started", stage: "extract", at: "yesterday" }, events));
+  assert.throws(
+    () => observeCapabilityCellFabricationRun(request(events)),
+    (error) => error instanceof FabricationRunObservationRefusal
+      && error.code === "invalid-event-time",
+  );
+  events[1] = event(1, { type: "stage-started", stage: "extract", at: "2026-07-24T00:00:00.000Z" }, events.slice(0,1));
+  assert.throws(
+    () => observeCapabilityCellFabricationRun(request(events)),
+    (error) => error instanceof FabricationRunObservationRefusal
+      && error.code === "event-time-regression",
+  );
+});
+
+test("stage transitions after completion refuse instead of contradicting completed state", () => {
+  const events = [];
+  events.push(event(0, { type: "demand-submitted" }, events));
+  for (const stage of stages) events.push(event(events.length, { type: "stage-completed", stage }, events));
+  events.push(event(events.length, { type: "fabrication-completed", cell: {} }, events));
+  events.push(event(events.length, { type: "stage-obstructed", stage: "execute", obstruction: "late" }, events));
+  assert.throws(
+    () => observeCapabilityCellFabricationRun(request(events)),
+    (error) => error instanceof FabricationRunObservationRefusal
+      && error.code === "post-completion-stage-event",
+  );
+});
