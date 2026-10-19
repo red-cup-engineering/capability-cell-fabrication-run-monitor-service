@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createPaidObservationLedger } from "../src/paid-observation-ledger.mjs";
 
-const INVOCATION = `sha256:${"ab".repeat(32)}`;
+const INVOCATION = `ni:///sha-256;${"A".repeat(43)}`;
 const EVIDENCE = { type: "X402SettlementEvidence", invocation: INVOCATION, transaction: `0x${"cd".repeat(32)}` };
 
 function fixture(overrides = {}) {
