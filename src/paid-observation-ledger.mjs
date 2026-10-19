@@ -112,7 +112,7 @@ export function createPaidObservationLedger({
       return { status: 200, body: { ok: true, invocation, status: "terminal", terminal } };
     }
     if (intents.has(invocation)) {
-      return { status: 202, body: { ok: true, invocation, status: "pending", terminal: null } };
+      return { status: 202, body: { ok: true, invocation, status: "intent-recorded", settlement: "unobserved", terminal: null } };
     }
     return {
       status: 404,
