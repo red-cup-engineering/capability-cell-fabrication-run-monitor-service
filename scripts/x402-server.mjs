@@ -2,6 +2,7 @@
 
 import { appendFile, mkdir, readFile } from "node:fs/promises";
 import { dirname } from "node:path";
+import { createPaidObservationLedger } from "../src/paid-observation-ledger.mjs";
 import express from "express";
 import {
   createExactEvmPaymentBoundary,
@@ -47,7 +48,7 @@ async function receiptState(path) {
   try {
     source = await readFile(path, "utf8");
   } catch (error) {
-    if (error?.code === "ENOENT") return { intents: new Map(), terminal: new Map() };
+    if (error?.code === "ENOENT") return { intents: new Map(), terminals: new Map() };
     throw error;
   }
   const records = source.split("\n").filter(Boolean).map((line) => JSON.parse(line));
@@ -55,7 +56,7 @@ async function receiptState(path) {
     intents: new Map(records
       .filter((record) => record?.type === "X402PaidFabricationRunObservationIntent")
       .map((record) => [record.invocation, record])),
-    terminal: new Map(records
+    terminals: new Map(records
       .filter((record) => [
         "X402PaidFabricationRunObservationReceipt",
         "X402PaidFabricationRunObservationRefusal",
@@ -78,8 +79,20 @@ export async function main() {
     throw new Error("published offer drifted from the hired pricing provider");
   }
   const recovered = await receiptState(receiptPath);
-  const pending = new Map(recovered.intents);
-  const terminal = new Map(recovered.terminal);
+  const ledger = createPaidObservationLedger({
+    intents: recovered.intents,
+    terminals: recovered.terminals,
+    append: (record) => appendReceipt(receiptPath, record),
+    observe: observeCapabilityCellFabricationRun,
+    projectRefusal: (error) => error instanceof FabricationRunObservationRefusal
+      ? error.toJSON()
+      : {
+        type: "CapabilityCellFabricationRunObservationRefusal",
+        code: "execution-error",
+        reason: error instanceof Error ? error.message : String(error),
+      },
+    pricing: priced.result,
+  });
   const boundary = createExactEvmPaymentBoundary({
     network,
     facilitatorUrl: required("X402_FACILITATOR_URL"),
@@ -101,34 +114,7 @@ export async function main() {
         description: "Observe one append-only Capability Cell fabrication run trajectory.",
       },
     },
-    afterSettle: async (event) => {
-      const settlementEvidence = x402SettlementEvidence(event);
-      const invocation = settlementEvidence.invocation;
-      const intent = pending.get(invocation);
-      if (!intent) throw new Error("settled payment has no exact observation intent");
-      let record;
-      try {
-        record = {
-          type: "X402PaidFabricationRunObservationReceipt",
-          invocation,
-          settlement: settlementEvidence,
-          pricing: priced.result,
-          result: observeCapabilityCellFabricationRun(intent.request),
-        };
-      } catch (error) {
-        record = {
-          type: "X402PaidFabricationRunObservationRefusal",
-          invocation,
-          settlement: settlementEvidence,
-          pricing: priced.result,
-          refusal: error instanceof FabricationRunObservationRefusal
-            ? error.toJSON()
-            : { type: "CapabilityCellFabricationRunObservationRefusal", code: "execution-error", reason: error.message },
-        };
-      }
-      terminal.set(invocation, record);
-      await appendReceipt(receiptPath, record);
-    },
+    afterSettle: async (event) => ledger.settle(x402SettlementEvidence(event)),
   });
   const app = express();
   app.set("trust proxy", "loopback");
@@ -165,20 +151,30 @@ export async function main() {
       });
     }
   });
+  // Retain the signed invocation before the payment middleware may settle it.
+  // An unsigned 402 challenge must not create an apparent paid operation.
+  app.post(resource, async (request, response, next) => {
+    const signature = request.get("payment-signature");
+    if (!signature) return next();
+    try {
+      await ledger.retain(x402PaymentIdentity(signature), request.body);
+      return next();
+    } catch (error) {
+      return response.status(error?.code === "invocation-payload-conflict" ? 409 : 400).json({
+        ok: false,
+        refusal: { type: "X402PaidFabricationRunObservationIntentRefusal" },
+      });
+    }
+  });
   app.use(boundary.middleware);
-  app.post(resource, async (request, response) => {
+  app.post(resource, (request, response) => {
     const invocation = x402PaymentIdentity(request.get("payment-signature"));
-    const intent = {
-      type: "X402PaidFabricationRunObservationIntent",
-      invocation,
-      request: structuredClone(request.body),
-    };
-    pending.set(invocation, intent);
-    await appendReceipt(receiptPath, intent);
-    response.status(202).json({
+    const reading = ledger.read(invocation);
+    if (reading.status === 404) throw new Error("payment invocation has no matching durable intent");
+    return response.status(202).json({
       ok: true,
       invocation,
-      status: "settlement-pending",
+      status: reading.status === 200 ? "terminal" : "settlement-pending",
       result: `/x402/capability-cell-fabrication-run-monitor/result/${invocation.slice(7)}`,
     });
   });
@@ -186,14 +182,8 @@ export async function main() {
     if (!/^[0-9a-f]{64}$/u.test(request.params.id)) {
       return response.status(400).json({ ok: false, refusal: { type: "InvalidInvocationIdentity" } });
     }
-    const invocation = `sha256:${request.params.id}`;
-    const isTerminal = terminal.has(invocation);
-    return response.status(isTerminal ? 200 : 202).json({
-      ok: true,
-      invocation,
-      status: isTerminal ? "terminal" : "pending",
-      terminal: terminal.get(invocation) ?? null,
-    });
+    const reading = ledger.read(`sha256:${request.params.id}`);
+    return response.status(reading.status).json(reading.body);
   });
   const host = process.env.HOST ?? "127.0.0.1";
   const port = Number(process.env.PORT ?? "15635");
