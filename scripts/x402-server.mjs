@@ -3,6 +3,7 @@
 import { readFile } from "node:fs/promises";
 import { appendReceipt, receiptState } from "../src/paid-observation-journal.mjs";
 import { createPaidObservationLedger } from "../src/paid-observation-ledger.mjs";
+import { paidObservationResultReference, paidObservationInvocationFromReference } from "../src/paid-observation-identity.mjs";
 import express from "express";
 import {
   createExactEvmPaymentBoundary,
@@ -130,7 +131,10 @@ export async function main() {
     const signature = request.get("payment-signature");
     if (!signature) return next();
     try {
-      await ledger.retain(x402PaymentIdentity(signature), request.body);
+      const invocation = x402PaymentIdentity(signature);
+      // Fail closed before payment if the installed identity producer disagrees.
+      paidObservationResultReference(invocation);
+      await ledger.retain(invocation, request.body);
       return next();
     } catch (error) {
       return response.status(error?.code === "invocation-payload-conflict" ? 409 : 400).json({
@@ -148,14 +152,15 @@ export async function main() {
       ok: true,
       invocation,
       status: reading.status === 200 ? "terminal" : "intent-recorded",
-      result: `/x402/capability-cell-fabrication-run-monitor/result/${invocation.slice(7)}`,
+      result: `/x402/capability-cell-fabrication-run-monitor/result/${paidObservationResultReference(invocation)}`,
     });
   });
   app.get("/x402/capability-cell-fabrication-run-monitor/result/:id", (request, response) => {
-    if (!/^[0-9a-f]{64}$/u.test(request.params.id)) {
+    const invocation = paidObservationInvocationFromReference(request.params.id);
+    if (!invocation) {
       return response.status(400).json({ ok: false, refusal: { type: "InvalidInvocationIdentity" } });
     }
-    const reading = ledger.read(`sha256:${request.params.id}`);
+    const reading = ledger.read(invocation);
     return response.status(reading.status).json(reading.body);
   });
   const host = process.env.HOST ?? "127.0.0.1";
