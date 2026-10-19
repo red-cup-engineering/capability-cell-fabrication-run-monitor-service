@@ -1,6 +1,6 @@
 {
   "name": "@red-cup-engineering/capability-cell-fabrication-run-monitor-service",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": false,
   "type": "module",
   "description": "Validates and folds one append-only Capability Cell fabrication event trajectory into its current observable state.",
