@@ -87,6 +87,7 @@ test("concurrent settlement executes exactly once and only claims terminal after
   const a = ledger.settle(EVIDENCE);
   const b = ledger.settle(EVIDENCE);
   assert.equal(ledger.read(INVOCATION).status, 202);
+  while (releaseTerminal === undefined) await new Promise((resolve) => setImmediate(resolve));
   releaseTerminal();
   const [first, second] = await Promise.all([a, b]);
   assert.deepEqual(first, second);
