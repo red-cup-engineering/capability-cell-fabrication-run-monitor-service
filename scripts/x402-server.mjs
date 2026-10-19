@@ -174,7 +174,7 @@ export async function main() {
     return response.status(202).json({
       ok: true,
       invocation,
-      status: reading.status === 200 ? "terminal" : "settlement-pending",
+      status: reading.status === 200 ? "terminal" : "intent-recorded",
       result: `/x402/capability-cell-fabrication-run-monitor/result/${invocation.slice(7)}`,
     });
   });
