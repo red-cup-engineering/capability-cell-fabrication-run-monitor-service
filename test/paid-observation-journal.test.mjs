@@ -93,6 +93,7 @@ test("a parseable but unterminated final record is not durable recovery evidence
       invocation: "ni:///sha-256;" + "A".repeat(43),
       request: { run: "r" },
     };
+    await appendReceipt(path, intent);
     await writeFile(path, JSON.stringify(intent), "utf8");
     await assert.rejects(receiptState(path), /unterminated record/);
   });
