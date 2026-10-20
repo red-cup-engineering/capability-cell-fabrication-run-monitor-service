@@ -134,3 +134,25 @@ test("unwritten terminals, orphaned receipts and lost durable writes cannot beco
   await assert.rejects(ledger.settle(EVIDENCE), /disk full/);
   assert.equal(ledger.read(INVOCATION).status, 202);
 });
+
+test("failed durable intent append never admits apparent pending payment and retry can recover", async () => {
+  const intents = new Map();
+  let attempts = 0;
+  const writes = [];
+  const { ledger } = fixture({
+    intents,
+    append: async (record) => {
+      attempts += 1;
+      if (attempts === 1) throw new Error("ENOSPC /private/receipt-path");
+      writes.push(record);
+    },
+  });
+  await assert.rejects(ledger.retain(INVOCATION, { run: "same-signed-request" }), /ENOSPC/);
+  assert.equal(ledger.read(INVOCATION).status, 404);
+  assert.equal(intents.size, 0);
+  await ledger.retain(INVOCATION, { run: "same-signed-request" });
+  assert.equal(ledger.read(INVOCATION).status, 202);
+  assert.equal(intents.size, 1);
+  assert.equal(writes.length, 1);
+  assert.equal(writes[0].request.run, "same-signed-request");
+});
