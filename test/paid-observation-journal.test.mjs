@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { appendReceipt, receiptState } from "../src/paid-observation-journal.mjs";
@@ -103,5 +103,28 @@ test("missing invocation on a payment record refuses instead of becoming an unde
   await withJournal(async (path) => {
     await appendReceipt(path, { type: "X402PaidFabricationRunObservationReceipt", result: { ok: true } });
     await assert.rejects(receiptState(path), /lacks signed invocation/);
+  });
+});
+
+
+test("append failure cannot silently resume behind uncertain journal bytes", async () => {
+  await withJournal(async (path) => {
+    const intent = {
+      type: "X402PaidFabricationRunObservationIntent",
+      invocation: "ni:///sha-256;" + "A".repeat(43),
+      request: { run: "r" },
+    };
+    // A directory at the receipt-file path makes the original append fail.
+    // Remove the obstruction: only retained failure must now prevent the retry.
+    await mkdir(path, { recursive: true });
+    await assert.rejects(appendReceipt(path, intent), { code: "EISDIR" });
+    await rm(path, { recursive: true });
+    await assert.rejects(appendReceipt(path, intent), { code: "EISDIR" });
+    await assert.rejects(readFile(path, "utf8"), { code: "ENOENT" });
+
+    // The poisoning applies to that path, not to an independent paid journal.
+    const clean = path + ".independent";
+    await appendReceipt(clean, intent);
+    assert.equal((await receiptState(clean)).intents.size, 1);
   });
 });
