@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { readFile } from "node:fs/promises";
+import { admitOcapnSturdyRef } from "../src/ocapn-admission.mjs";
 import { appendReceipt, receiptState } from "../src/paid-observation-journal.mjs";
 import { createPaidObservationLedger } from "../src/paid-observation-ledger.mjs";
 import { paidObservationResultReference, paidObservationInvocationFromReference } from "../src/paid-observation-identity.mjs";
@@ -97,33 +98,15 @@ export async function main() {
     response.json({ ...offer, pricing: priced.result });
   });
   app.post(resource, async (request, response, next) => {
-    try {
-      const authorization = request.get("authorization") ?? "";
-      const matched = /^OCapN (urn:ocapn:sturdyref:[A-Za-z0-9_-]{43})$/u.exec(authorization);
-      if (!matched) throw new Error("one OCapN sturdy reference is required");
-      const admitted = await fetch(required("OCAPN_ADMISSION_URL"), {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          sturdyRef: matched[1],
-          locus: "observe-capability-cell-fabrication-run",
-        }),
-      }).then((result) => result.json());
-      if (admitted?.admitted !== true) {
-        throw new Error(`OCapN provider refused: ${admitted?.reason ?? "unknown"}`);
-      }
-      await appendReceipt(receiptPath, {
-        type: "OCapNAdmissionReceipt",
-        operation: "observe-capability-cell-fabrication-run",
-        admission: admitted,
-      });
-      next();
-    } catch (error) {
-      response.status(403).json({
-        ok: false,
-        refusal: { type: "OCapNSturdyRefAdmissionRefusal", reason: error.message },
-      });
+    const outcome = await admitOcapnSturdyRef({
+      authorization: request.get("authorization"),
+      admissionUrl: process.env.OCAPN_ADMISSION_URL,
+      appendAdmission: (record) => appendReceipt(receiptPath, record),
+    });
+    if (!outcome.admitted) {
+      return response.status(outcome.status).json({ ok: false, refusal: outcome.refusal });
     }
+    return next();
   });
   // Retain the signed invocation before the payment middleware may settle it.
   // An unsigned 402 challenge must not create an apparent paid operation.
