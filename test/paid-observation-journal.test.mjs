@@ -128,3 +128,22 @@ test("append failure cannot silently resume behind uncertain journal bytes", asy
     assert.equal((await receiptState(clean)).intents.size, 1);
   });
 });
+
+
+test("invalid in-memory receipt is refused without poisoning a healthy journal", async () => {
+  await withJournal(async (path) => {
+    await assert.rejects(appendReceipt(path, { invalid: 3n }), TypeError);
+    await assert.rejects(appendReceipt(path, undefined), /not a JSON record/);
+    const cyclic = { type: "cycle" };
+    cyclic.self = cyclic;
+    await assert.rejects(appendReceipt(path, cyclic), TypeError);
+    await assert.rejects(readFile(path, "utf8"), { code: "ENOENT" });
+    const intent = {
+      type: "X402PaidFabricationRunObservationIntent",
+      invocation: "ni:///sha-256;" + "A".repeat(43),
+      request: { run: "r" },
+    };
+    await appendReceipt(path, intent);
+    assert.equal((await receiptState(path)).intents.size, 1);
+  });
+});
