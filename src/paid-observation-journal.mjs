@@ -32,6 +32,7 @@ export async function receiptState(path) {
     if (error?.code === "ENOENT") return { intents: new Map(), terminals: new Map() };
     throw error;
   }
+  const records = source.split("\n").filter(Boolean).map((line) => JSON.parse(line));
   // A successful append writes a newline and flushes it. A final JSON object
   // without that delimiter may be a torn write, even when JSON parses.
   if (source !== "" && !source.endsWith("\n")) {
@@ -39,8 +40,7 @@ export async function receiptState(path) {
   }
   const intents = new Map();
   const terminals = new Map();
-  for (const line of source.split("\n").filter(Boolean)) {
-    const record = JSON.parse(line);
+  for (const record of records) {
     let bucket;
     if (record?.type === "X402PaidFabricationRunObservationIntent") {
       bucket = intents;
