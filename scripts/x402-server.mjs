@@ -148,7 +148,7 @@ export async function main() {
     const invocation = x402PaymentIdentity(request.get("payment-signature"));
     const reading = ledger.read(invocation);
     if (reading.status === 404) throw new Error("payment invocation has no matching durable intent");
-    return response.status(202).json({
+    return response.status(reading.status).json({
       ok: true,
       invocation,
       status: reading.status === 200 ? "terminal" : "intent-recorded",
