@@ -7,13 +7,19 @@ import { isDeepStrictEqual } from "node:util";
 const writes = new Map();
 
 export async function appendReceipt(path, record) {
+  // Serialization cannot have written bytes, so refuse malformed in-memory
+  // records before touching the per-file durable-write chain.
+  const encoded = JSON.stringify(record);
+  if (typeof encoded !== "string") {
+    throw new TypeError("paid observation receipt is not a JSON record");
+  }
   const previous = writes.get(path) ?? Promise.resolve();
   // After any failed append we cannot know whether a partial record reached
   // disk. Preserve that failure for this path until a verified restart reads
   // the durable journal; do not append beyond uncertain bytes.
   const write = previous.then(async () => {
     await mkdir(dirname(path), { recursive: true });
-    await appendFile(path, `${JSON.stringify(record)}\n`, {
+    await appendFile(path, `${encoded}\n`, {
       encoding: "utf8",
       mode: 0o600,
       flush: true,
