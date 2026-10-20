@@ -113,18 +113,35 @@ export async function main() {
   app.post(resource, async (request, response, next) => {
     const signature = request.get("payment-signature");
     if (!signature) return next();
+    let invocation;
     try {
-      const invocation = x402PaymentIdentity(signature);
-      // Fail closed before payment if the installed identity producer disagrees.
+      invocation = x402PaymentIdentity(signature);
+      // An unsupported signed-identity format is a bad caller request.
       paidObservationResultReference(invocation);
-      await ledger.retain(invocation, request.body);
-      return next();
-    } catch (error) {
-      return response.status(error?.code === "invocation-payload-conflict" ? 409 : 400).json({
+    } catch {
+      return response.status(400).json({
         ok: false,
         refusal: { type: "X402PaidFabricationRunObservationIntentRefusal" },
       });
     }
+    try {
+      // Source-owned journal retention must finish before settlement.
+      await ledger.retain(invocation, request.body);
+    } catch (error) {
+      if (error?.code === "invocation-payload-conflict") {
+        return response.status(409).json({
+          ok: false,
+          refusal: { type: "X402PaidFabricationRunObservationIntentRefusal" },
+        });
+      }
+      // Disk or journal errors are service unavailability, NOT a bad
+      // signature, authorization denial or fabricated pending purchase.
+      return response.status(503).json({
+        ok: false,
+        refusal: { type: "X402PaidFabricationRunObservationIntentUnavailable" },
+      });
+    }
+    return next();
   });
   app.use(boundary.middleware);
   app.post(resource, (request, response) => {
