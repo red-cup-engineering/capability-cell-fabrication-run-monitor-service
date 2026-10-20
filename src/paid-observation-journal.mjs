@@ -8,7 +8,10 @@ const writes = new Map();
 
 export async function appendReceipt(path, record) {
   const previous = writes.get(path) ?? Promise.resolve();
-  const write = previous.catch(() => {}).then(async () => {
+  // After any failed append we cannot know whether a partial record reached
+  // disk. Preserve that failure for this path until a verified restart reads
+  // the durable journal; do not append beyond uncertain bytes.
+  const write = previous.then(async () => {
     await mkdir(dirname(path), { recursive: true });
     await appendFile(path, `${JSON.stringify(record)}\n`, {
       encoding: "utf8",
@@ -17,11 +20,8 @@ export async function appendReceipt(path, record) {
     });
   });
   writes.set(path, write);
-  try {
-    await write;
-  } finally {
-    if (writes.get(path) === write) writes.delete(path);
-  }
+  await write;
+  if (writes.get(path) === write) writes.delete(path);
 }
 
 export async function receiptState(path) {
