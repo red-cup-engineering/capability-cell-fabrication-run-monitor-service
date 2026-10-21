@@ -32,5 +32,14 @@
     "@red-cup-engineering/witness-journal-rdf-projection-service": "1.1.0",
     "@red-cup-engineering/x402-services-section": "1.2.1",
     "express": "5.2.1"
+  },
+  "license": "MIT",
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/561-group/.github/blob/main/TIPS.md"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/red-cup-engineering/capability-cell-fabrication-run-monitor-service.git"
   }
 }
