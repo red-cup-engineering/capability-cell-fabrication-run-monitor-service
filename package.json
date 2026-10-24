@@ -27,10 +27,10 @@
     "@a2a-js/sdk": "1.0.0-beta.0",
     "@red-cup-engineering/a2a-contracted-agent-service": "2.0.5",
     "@red-cup-engineering/a2a-rmn-part-service": "1.0.1",
-    "@red-cup-engineering/activitypub-services-section": "1.0.2",
+    "@red-cup-engineering/activitypub-engineering-services-section": "1.0.2",
     "@red-cup-engineering/relation-model-notation-runtime": "7.0.0",
     "@red-cup-engineering/witness-journal-rdf-projection-service": "1.1.0",
-    "@red-cup-engineering/x402-services-section": "1.2.1",
+    "@red-cup-engineering/x402-engineering-services-section": "1.2.1",
     "express": "5.2.1"
   },
   "license": "MIT",
