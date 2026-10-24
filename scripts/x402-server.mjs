@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { readFile } from "node:fs/promises";
+import { admitOcapnSturdyRef } from "../src/ocapn-admission.mjs";
 import { appendReceipt, receiptState } from "../src/paid-observation-journal.mjs";
 import { createPaidObservationLedger } from "../src/paid-observation-ledger.mjs";
 import { paidObservationResultReference, paidObservationInvocationFromReference } from "../src/paid-observation-identity.mjs";
@@ -97,58 +98,57 @@ export async function main() {
     response.json({ ...offer, pricing: priced.result });
   });
   app.post(resource, async (request, response, next) => {
-    try {
-      const authorization = request.get("authorization") ?? "";
-      const matched = /^OCapN (urn:ocapn:sturdyref:[A-Za-z0-9_-]{43})$/u.exec(authorization);
-      if (!matched) throw new Error("one OCapN sturdy reference is required");
-      const admitted = await fetch(required("OCAPN_ADMISSION_URL"), {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          sturdyRef: matched[1],
-          locus: "observe-capability-cell-fabrication-run",
-        }),
-      }).then((result) => result.json());
-      if (admitted?.admitted !== true) {
-        throw new Error(`OCapN provider refused: ${admitted?.reason ?? "unknown"}`);
-      }
-      await appendReceipt(receiptPath, {
-        type: "OCapNAdmissionReceipt",
-        operation: "observe-capability-cell-fabrication-run",
-        admission: admitted,
-      });
-      next();
-    } catch (error) {
-      response.status(403).json({
-        ok: false,
-        refusal: { type: "OCapNSturdyRefAdmissionRefusal", reason: error.message },
-      });
+    const outcome = await admitOcapnSturdyRef({
+      authorization: request.get("authorization"),
+      admissionUrl: process.env.OCAPN_ADMISSION_URL,
+      appendAdmission: (record) => appendReceipt(receiptPath, record),
+    });
+    if (!outcome.admitted) {
+      return response.status(outcome.status).json({ ok: false, refusal: outcome.refusal });
     }
+    return next();
   });
   // Retain the signed invocation before the payment middleware may settle it.
   // An unsigned 402 challenge must not create an apparent paid operation.
   app.post(resource, async (request, response, next) => {
     const signature = request.get("payment-signature");
     if (!signature) return next();
+    let invocation;
     try {
-      const invocation = x402PaymentIdentity(signature);
-      // Fail closed before payment if the installed identity producer disagrees.
+      invocation = x402PaymentIdentity(signature);
+      // An unsupported signed-identity format is a bad caller request.
       paidObservationResultReference(invocation);
-      await ledger.retain(invocation, request.body);
-      return next();
-    } catch (error) {
-      return response.status(error?.code === "invocation-payload-conflict" ? 409 : 400).json({
+    } catch {
+      return response.status(400).json({
         ok: false,
         refusal: { type: "X402PaidFabricationRunObservationIntentRefusal" },
       });
     }
+    try {
+      // Source-owned journal retention must finish before settlement.
+      await ledger.retain(invocation, request.body);
+    } catch (error) {
+      if (error?.code === "invocation-payload-conflict") {
+        return response.status(409).json({
+          ok: false,
+          refusal: { type: "X402PaidFabricationRunObservationIntentRefusal" },
+        });
+      }
+      // Disk or journal errors are service unavailability, NOT a bad
+      // signature, authorization denial or fabricated pending purchase.
+      return response.status(503).json({
+        ok: false,
+        refusal: { type: "X402PaidFabricationRunObservationIntentUnavailable" },
+      });
+    }
+    return next();
   });
   app.use(boundary.middleware);
   app.post(resource, (request, response) => {
     const invocation = x402PaymentIdentity(request.get("payment-signature"));
     const reading = ledger.read(invocation);
     if (reading.status === 404) throw new Error("payment invocation has no matching durable intent");
-    return response.status(202).json({
+    return response.status(reading.status).json({
       ok: true,
       invocation,
       status: reading.status === 200 ? "terminal" : "intent-recorded",
