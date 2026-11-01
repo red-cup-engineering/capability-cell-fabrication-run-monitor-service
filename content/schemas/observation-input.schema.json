@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:red-cup-engineering:schema:capability-cell-fabrication-run-observation-input:v1",
+  "$id": "urn:red-cup-engineering:schema:monitor-capability-cell-fabrication-run-observation-input:v2",
   "type": "object",
   "required": ["type", "run", "stages", "events"],
   "properties": {

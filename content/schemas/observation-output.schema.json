@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:red-cup-engineering:schema:capability-cell-fabrication-run-observation-output:v1",
+  "$id": "urn:red-cup-engineering:schema:monitor-capability-cell-fabrication-run-observation-output:v2",
   "type": "object",
   "required": ["type", "state"],
   "properties": {
     "type": { "const": "CapabilityCellFabricationRunObservation" },
-    "state": { "$ref": "observed-run-state.schema.json" }
+    "state": { "$ref": "urn:red-cup-engineering:schema:monitor-observed-capability-cell-fabrication-run-state:v2" }
   },
   "additionalProperties": false
 }
