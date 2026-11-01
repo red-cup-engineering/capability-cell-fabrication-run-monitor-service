@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:red-cup-engineering:schema:monitor-paid-observation-journal-entry:v1",
+  "title": "Authored signed payment-observation JSON Lines journal record",
+  "description": "Validates new first-party envelope records. Historical journal recovery must not require this schema. Intent.request is deliberately unrestricted to retain and refuse malformed signed requests after settlement.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/intent"
+    },
+    {
+      "$ref": "#/$defs/receipt"
+    },
+    {
+      "$ref": "#/$defs/refusal"
+    },
+    {
+      "$ref": "#/$defs/ocapnAdmission"
+    }
+  ],
+  "$defs": {
+    "invocation": {
+      "type": "string",
+      "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"
+    },
+    "intent": {
+      "type": "object",
+      "required": [
+        "type",
+        "invocation",
+        "request"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "X402PaidFabricationRunObservationIntent"
+        },
+        "invocation": {
+          "$ref": "#/$defs/invocation"
+        },
+        "request": {}
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "required": [
+        "type",
+        "invocation",
+        "settlement",
+        "pricing",
+        "result"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "X402PaidFabricationRunObservationReceipt"
+        },
+        "invocation": {
+          "$ref": "#/$defs/invocation"
+        },
+        "settlement": {
+          "type": "object"
+        },
+        "pricing": {
+          "type": "object"
+        },
+        "result": {
+          "$ref": "urn:red-cup-engineering:schema:monitor-capability-cell-fabrication-run-observation-output:v2"
+        }
+      }
+    },
+    "refusal": {
+      "type": "object",
+      "required": [
+        "type",
+        "invocation",
+        "settlement",
+        "pricing",
+        "refusal"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "X402PaidFabricationRunObservationRefusal"
+        },
+        "invocation": {
+          "$ref": "#/$defs/invocation"
+        },
+        "settlement": {
+          "type": "object"
+        },
+        "pricing": {
+          "type": "object"
+        },
+        "refusal": {
+          "$ref": "urn:red-cup-engineering:schema:capability-cell-fabrication-run-observation-refusal:v1"
+        }
+      }
+    },
+    "ocapnAdmission": {
+      "type": "object",
+      "required": [
+        "type",
+        "operation",
+        "admission"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "OCapNAdmissionReceipt"
+        },
+        "operation": {
+          "const": "observe-capability-cell-fabrication-run"
+        },
+        "admission": {
+          "type": "object",
+          "required": [
+            "admitted"
+          ],
+          "properties": {
+            "admitted": {
+              "const": true
+            }
+          }
+        }
+      }
+    }
+  }
+}
