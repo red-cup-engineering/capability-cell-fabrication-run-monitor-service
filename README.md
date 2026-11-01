@@ -124,3 +124,25 @@ Existing A2A/RMN and x402 payment/authentication protocols remain in their
 incumbent owners. Full dependency-installed Node tests, installed endpoint,
 canonical AOE stage-law identity, registry publication and independently
 received Group Work remain separate original receiving gates under Monitor #2.
+
+### Authored payment-journal record schema
+
+`content/schemas/paid-observation-journal-entry.schema.json` now declares
+four discriminated first-party **JSON Schema Draft 2020-12** record envelopes:
+signed intent, terminal receipt, terminal refusal and OCapN admission.
+`PAID_JOURNAL_ENTRY_SCHEMA` is exported through the original immutable
+`./schemas` module, with a matching TypeScript declaration. Receipt and
+refusal records reference the exact source-owned Monitor v2 observation
+and existing shared v1 refusal schemas. Signed intent `request` remains
+unrestricted so the original payment journal can durably retain an invalid
+signed request and later record its typed refusal.
+
+This is a **new authoring and interoperability resource, not a mandatory
+historical journal migration**. The original `recoverJournalState` still
+reads newline-delimited JSON with its existing identity, duplicate, conflict
+and torn-record rules; the schema is not silently imposed upon past entries.
+The source-native `test/journal-envelope-schema.test.mjs` checks source
+identity, discriminants, schema references and immutability. Independent
+Draft 2020-12 validation must check positive/adverse authored records before
+an actual writer adopts any new validation gate. A schema resource and
+a typed import are not a deployed publication or accepted payment.
