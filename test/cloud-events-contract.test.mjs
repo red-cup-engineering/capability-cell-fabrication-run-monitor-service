@@ -43,3 +43,14 @@ test("HTTP media negotiation is explicit and never silently wraps old responses"
   assert.equal(result.body.data.state.eventHead,head);
   assert.equal(representPaidObservationResponse({status:404,body:{}},CLOUD_EVENT_MEDIA_TYPE).status,404);
 });
+
+test("one captured source snapshot prevents changed caller getters from altering event metadata",()=>{
+  const input=reading();let reads=0;
+  Object.defineProperty(input.state,"lastEventAt",{
+    enumerable:true, get(){ reads++; return reads===1? "2026-10-31T21:00:00.123Z":"2026-10-31T22:00:00Z"; },
+  });
+  const projected=toObservationCloudEvent(input);
+  assert.equal(reads,1);
+  assert.equal(projected.time,projected.data.state.lastEventAt);
+  assert.equal(projected.time,"2026-10-31T21:00:00.123Z");
+});
