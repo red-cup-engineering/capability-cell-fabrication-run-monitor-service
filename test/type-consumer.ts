@@ -15,3 +15,8 @@ const badStatus: FabricationRunObservation["state"]["status"] = "installed";
 // @ts-expect-error a CloudEvents version cannot silently drift
 const badVersion: CloudEvent<FabricationRunObservation>["specversion"] = "2.0";
 void [badStatus,badVersion];
+
+import type { appendJournalEntry, recoverJournalState } from "../types/paid-journal.d.mts";
+declare const append: typeof appendJournalEntry;
+declare const recover: typeof recoverJournalState;
+void [append,recover];
