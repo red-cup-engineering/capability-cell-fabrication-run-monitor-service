@@ -32,6 +32,10 @@ test("invalid or mismatched source time, head and URI refuse before projection",
 test("HTTP media negotiation is explicit and never silently wraps old responses",()=>{
   assert.equal(acceptsCloudEventJson("*/*"),false);
   assert.equal(acceptsCloudEventJson("application/cloudevents+json;q=0"),false);
+  assert.equal(acceptsCloudEventJson("application/cloudevents+json;q=bogus"),false);
+  assert.equal(acceptsCloudEventJson("application/cloudevents+json;q=1.2"),false);
+  assert.equal(acceptsCloudEventJson("application/cloudevents+json;q=0.1234"),false);
+  assert.equal(acceptsCloudEventJson("application/cloudevents+json;q=0.125"),true);
   const normal={status:200,body:{terminal:{type:"X402PaidFabricationRunObservationReceipt",result:reading()}}};
   assert.equal(representPaidObservationResponse(normal,"*/*").contentType,"application/json");
   const result=representPaidObservationResponse(normal,CLOUD_EVENT_MEDIA_TYPE);
