@@ -27,3 +27,7 @@ declare const execute: typeof executeA2aMessage;
 declare const identify: typeof canonicalEventIdentity;
 declare const encodeEvent: typeof canonicalEventCarrier;
 void [execute,identify,encodeEvent];
+
+import { PAID_JOURNAL_ENTRY_SCHEMA } from "@red-cup-engineering/capability-cell-fabrication-run-monitor-service/schemas";
+const authoredJournalSchemaId: string = PAID_JOURNAL_ENTRY_SCHEMA.$id;
+void authoredJournalSchemaId;
