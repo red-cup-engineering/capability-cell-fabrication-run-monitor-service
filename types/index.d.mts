@@ -21,7 +21,7 @@ export interface FabricationRunObservationRequest {
 export interface FabricationRunObservedState {
   readonly id: string;
   readonly status: FabricationStatus;
-  readonly demand: Readonly<Record<string, unknown>> | null;
+  readonly demand: unknown;
   readonly completed: readonly string[];
   readonly currentStage: string | null;
   readonly obstruction: FabricationJournalEntry | null;
@@ -42,6 +42,7 @@ export interface FabricationRunObservationRejection {
   readonly reason: string;
 }
 export declare class FabricationRunObservationRefusal extends Error {
+  constructor(code: string, reason: string);
   readonly code: string;
   toJSON(): FabricationRunObservationRejection;
 }
