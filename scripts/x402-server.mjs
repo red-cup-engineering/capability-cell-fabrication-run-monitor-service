@@ -162,7 +162,7 @@ export async function main() {
       return response.status(400).json({ ok: false, refusal: { type: "InvalidInvocationIdentity" } });
     }
     const reading = ledger.getReceiptResponse(invocation);
-    const representation = representPaidObservationResponse(reading, request.get("accept"));
+    const representation = representPaidObservationResponse(reading, request.get("accept"), { source: process.env.CAPABILITY_MONITOR_EVENT_SOURCE });
     return response.status(representation.status).type(representation.contentType).json(representation.body);
   });
   const host = process.env.HOST ?? "127.0.0.1";
