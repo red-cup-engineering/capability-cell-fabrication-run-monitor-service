@@ -8,7 +8,7 @@ let requestJson = "";
 for await (const inputChunk of process.stdin) requestJson += inputChunk;
 try {
   const observation = observeCapabilityCellFabricationRun(JSON.parse(requestJson));
-  const representation = useCloudEvents ? toObservationCloudEvent(observation) : observation;
+  const representation = useCloudEvents ? toObservationCloudEvent(observation, { source: process.env.CAPABILITY_MONITOR_EVENT_SOURCE }) : observation;
   process.stdout.write(`${JSON.stringify(representation)}\n`);
 } catch (error) {
   const rejection = typeof error?.toJSON === "function"
