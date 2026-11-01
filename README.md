@@ -8,3 +8,26 @@
 <!-- 561-group-standards:badges:end -->
 
 Validates and folds one append-only Capability Cell fabrication event trajectory into its current observable state.
+
+## Paid observation receipt continuity
+
+The existing `src/paid-observation-ledger.mjs` binds a signed x402 invocation to a
+retained request and one terminal receipt or refusal. Its returned readings are
+detached values: callers and observation callbacks cannot mutate durable intent,
+settlement evidence, pricing or results through those returned objects. The
+underlying journal remains `src/paid-observation-journal.mjs`; this is not a
+second settlement ledger or an authorization grant.
+
+An intent is only pending until its original append completes. A terminal result
+is visible only after the terminal append succeeds. After an interrupted or
+uncertain append, **do not blindly retry a payment or reconstruct success from an
+HTTP response**: stop the affected seller, inspect the original journal with
+`receiptState`, and reconcile the signed invocation and existing terminal
+before restarting the owner. Conflicting entries must refuse rather than
+overwrite. The existing OCapN pre-payment admission and x402 settlement checks
+remain separately mandatory.
+
+Run `node --test test/paid-observation-ledger.test.mjs test/paid-observation-receipt-isolation.test.mjs`
+for the focused source-level checks and `npm run verify` in a dependency-equipped,
+source-pinned owner installation for all CLI/A2A/x402 tests. Neither command
+by itself proves an installed recipient received the corrected release.
