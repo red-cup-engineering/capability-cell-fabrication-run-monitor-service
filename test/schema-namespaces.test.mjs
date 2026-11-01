@@ -48,3 +48,23 @@ test("the Monitor wire profile retains stricter event time and explicit lastEven
   assert.equal(OBSERVATION_INPUT_SCHEMA.properties.type.const,
     "CapabilityCellFabricationRunObservationRequest");
 });
+
+test("a second consumer cannot rewrite a shared schema identity or reference after import", () => {
+  const schemas = [
+    OBSERVATION_INPUT_SCHEMA,
+    OBSERVATION_OUTPUT_SCHEMA,
+    OBSERVATION_REFUSAL_SCHEMA,
+    OBSERVED_RUN_STATE_SCHEMA,
+  ];
+  const walk = (node) => {
+    if (node === null || typeof node !== "object") return;
+    assert.equal(Object.isFrozen(node), true, "nested schema carrier must be immutable");
+    for (const child of Object.values(node)) walk(child);
+  };
+  for (const schema of schemas) walk(schema);
+  const expectedRef = OBSERVATION_OUTPUT_SCHEMA.properties.state.$ref;
+  assert.throws(() => { OBSERVATION_OUTPUT_SCHEMA.properties.state.$ref = "urn:forged"; }, TypeError);
+  assert.equal(OBSERVATION_OUTPUT_SCHEMA.properties.state.$ref, expectedRef);
+  assert.throws(() => { OBSERVATION_INPUT_SCHEMA.properties.events.items.properties.at.format = "string"; }, TypeError);
+  assert.equal(OBSERVATION_INPUT_SCHEMA.properties.events.items.properties.at.format, "date-time");
+});
