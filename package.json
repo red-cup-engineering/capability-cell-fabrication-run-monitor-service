@@ -26,6 +26,10 @@
     "./paid-observation-ledger": {
       "types": "./types/paid-ledger.d.mts",
       "import": "./src/paid-observation-ledger.mjs"
+    },
+    "./paid-observation-journal": {
+      "types": "./types/paid-journal.d.mts",
+      "import": "./src/paid-observation-journal.mjs"
     }
   },
   "bin": {
