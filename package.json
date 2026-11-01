@@ -9,8 +9,14 @@
       "types": "./types/index.d.mts",
       "import": "./src/observe.mjs"
     },
-    "./a2a-executor": "./src/a2a-executor.mjs",
-    "./event-identity": "./src/event-identity.mjs",
+    "./a2a-executor": {
+      "types": "./types/a2a-executor.d.mts",
+      "import": "./src/a2a-executor.mjs"
+    },
+    "./event-identity": {
+      "types": "./types/event-identity.d.mts",
+      "import": "./src/event-identity.mjs"
+    },
     "./schemas": {
       "types": "./types/schemas.d.mts",
       "import": "./src/schemas.mjs"
