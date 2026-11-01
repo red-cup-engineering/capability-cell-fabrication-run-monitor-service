@@ -1,6 +1,6 @@
-import type { FabricationRunObservationRequest, FabricationRunObservation } from "../types/index.d.mts";
-import type { CloudEvent } from "../types/cloud-events.d.mts";
-import type { PaidObservationLedger, PaidObservationHttpResponse } from "../types/paid-ledger.d.mts";
+import type { FabricationRunObservationRequest, FabricationRunObservation } from "@red-cup-engineering/capability-cell-fabrication-run-monitor-service";
+import type { CloudEvent } from "@red-cup-engineering/capability-cell-fabrication-run-monitor-service/cloud-events";
+import type { PaidObservationLedger, PaidObservationHttpResponse } from "@red-cup-engineering/capability-cell-fabrication-run-monitor-service/paid-observation-ledger";
 
 declare const request: FabricationRunObservationRequest;
 declare const observation: FabricationRunObservation;
@@ -16,7 +16,7 @@ const badStatus: FabricationRunObservation["state"]["status"] = "installed";
 const badVersion: CloudEvent<FabricationRunObservation>["specversion"] = "2.0";
 void [badStatus,badVersion];
 
-import type { appendJournalEntry, recoverJournalState } from "../types/paid-journal.d.mts";
+import type { appendJournalEntry, recoverJournalState } from "@red-cup-engineering/capability-cell-fabrication-run-monitor-service/paid-observation-journal";
 declare const append: typeof appendJournalEntry;
 declare const recover: typeof recoverJournalState;
 void [append,recover];
