@@ -2,7 +2,7 @@
 
 import { readFile } from "node:fs/promises";
 import { admitOcapnSturdyRef } from "../src/ocapn-admission.mjs";
-import { appendReceipt, receiptState } from "../src/paid-observation-journal.mjs";
+import { appendJournalEntry, recoverJournalState } from "../src/paid-observation-journal.mjs";
 import { createPaidObservationLedger } from "../src/paid-observation-ledger.mjs";
 import { paidObservationResultReference, paidObservationInvocationFromReference } from "../src/paid-observation-identity.mjs";
 import express from "express";
@@ -54,11 +54,11 @@ export async function main() {
       || offer.price.payTo?.toLowerCase() !== settlement.split(":").at(-1).toLowerCase()) {
     throw new Error("published offer drifted from the hired pricing provider");
   }
-  const recovered = await receiptState(receiptPath);
+  const recovered = await recoverJournalState(receiptPath);
   const ledger = createPaidObservationLedger({
     intents: recovered.intents,
     terminals: recovered.terminals,
-    append: (record) => appendReceipt(receiptPath, record),
+    append: (record) => appendJournalEntry(receiptPath, record),
     observe: observeCapabilityCellFabricationRun,
     projectRefusal: (error) => error instanceof FabricationRunObservationRefusal
       ? error.toJSON()
@@ -102,7 +102,7 @@ export async function main() {
     const outcome = await admitOcapnSturdyRef({
       authorization: request.get("authorization"),
       admissionUrl: process.env.OCAPN_ADMISSION_URL,
-      appendAdmission: (record) => appendReceipt(receiptPath, record),
+      appendAdmission: (record) => appendJournalEntry(receiptPath, record),
     });
     if (!outcome.admitted) {
       return response.status(outcome.status).json({ ok: false, refusal: outcome.refusal });
