@@ -5,10 +5,28 @@
   "type": "module",
   "description": "Validates and folds one append-only Capability Cell fabrication event trajectory into its current observable state.",
   "exports": {
-    ".": "./src/observe.mjs",
+    ".": {
+      "types": "./types/index.d.mts",
+      "import": "./src/observe.mjs"
+    },
     "./a2a-executor": "./src/a2a-executor.mjs",
     "./event-identity": "./src/event-identity.mjs",
-    "./schemas": "./src/schemas.mjs"
+    "./schemas": {
+      "types": "./types/schemas.d.mts",
+      "import": "./src/schemas.mjs"
+    },
+    "./cloud-events": {
+      "types": "./types/cloud-events.d.mts",
+      "import": "./src/cloud-events.mjs"
+    },
+    "./http-representations": {
+      "types": "./types/http-representations.d.mts",
+      "import": "./src/http-representations.mjs"
+    },
+    "./paid-observation-ledger": {
+      "types": "./types/paid-ledger.d.mts",
+      "import": "./src/paid-observation-ledger.mjs"
+    }
   },
   "bin": {
     "observe-capability-cell-fabrication-run": "./scripts/observe.mjs",
@@ -16,9 +34,10 @@
     "serve-capability-cell-fabrication-run-observation-seller": "./scripts/x402-server.mjs"
   },
   "scripts": {
-    "check": "node --check src/schemas.mjs && node --check src/event-identity.mjs && node --check src/observe.mjs && node --check src/paid-observation-ledger.mjs && node --check src/paid-observation-journal.mjs && node --check src/ocapn-admission.mjs && node --check src/paid-observation-identity.mjs && node --check src/a2a-executor.mjs && node --check scripts/observe.mjs && node --check scripts/execute-a2a-message.mjs && node --check scripts/x402-server.mjs",
+    "check": "node --check src/schemas.mjs && node --check src/event-identity.mjs && node --check src/observe.mjs && node --check src/paid-observation-ledger.mjs && node --check src/paid-observation-journal.mjs && node --check src/ocapn-admission.mjs && node --check src/paid-observation-identity.mjs && node --check src/a2a-executor.mjs && node --check scripts/observe.mjs && node --check scripts/execute-a2a-message.mjs && node --check scripts/x402-server.mjs && node --check src/cloud-events.mjs && node --check src/http-representations.mjs",
     "test": "node --test test/*.test.mjs",
-    "verify": "npm run check && npm test"
+    "verify": "npm run check && npm test",
+    "check:types": "tsc --noEmit -p tsconfig.types.json"
   },
   "engines": {
     "node": ">=22"
@@ -41,5 +60,6 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/red-cup-engineering/capability-cell-fabrication-run-monitor-service.git"
-  }
+  },
+  "types": "./types/index.d.mts"
 }
