@@ -24,8 +24,13 @@ function absoluteSourceUri(value) {
  */
 export function toObservationCloudEvent(observation, { source = OBSERVATION_EVENT_SOURCE } = {}) {
   const sourceUri = absoluteSourceUri(source);
-  const state = observation?.state;
-  if (observation?.type !== "CapabilityCellFabricationRunObservation"
+  // Snapshot once. Validation and the returned envelope must use the same
+  // detached data; a changing caller must not race this transformation.
+  let data;
+  try { data = structuredClone(observation); }
+  catch { throw new TypeError("CloudEvents projection requires serializable observation data"); }
+  const state = data?.state;
+  if (data?.type !== "CapabilityCellFabricationRunObservation"
       || !state || typeof state !== "object"
       || typeof state.id !== "string" || state.id.length === 0
       || typeof state.eventHead !== "string" || !/^ni:\/\/\/sha-256;[A-Za-z0-9_-]{43}$/u.test(state.eventHead)
@@ -35,11 +40,10 @@ export function toObservationCloudEvent(observation, { source = OBSERVATION_EVEN
       || state.events.at(-1)?.at !== state.lastEventAt
       || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u.test(state.lastEventAt)
       || !Number.isFinite(Date.parse(state.lastEventAt))) {
-    throw new TypeError("CloudEvents projection requires an admitted fabrication-run observation and source event head");
+    throw new TypeError("CloudEvents projection requires typed observation data with consistent source event metadata");
   }
   // This ID names the *representation's exact JSON bytes*, not the native
   // Sign/WitnessJournal semantic NI. The latter remains in data.state.eventHead.
-  const data = structuredClone(observation);
   const eventId = `sha256-${createHash("sha256")
     .update(JSON.stringify({ source: sourceUri, data }))
     .digest("hex")}`;
