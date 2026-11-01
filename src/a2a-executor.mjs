@@ -9,33 +9,33 @@ import { FabricationRunObservationRefusal, observeCapabilityCellFabricationRun }
 
 export const ACTOR = "urn:ame:capability-cell-fabrication-run-monitor-service";
 
-export async function executeA2aMessage(source, options = {}) {
-  const message = Message.fromJSON(source);
-  if (message.role !== Role.ROLE_USER) {
+export async function executeA2aMessage(inboundPayload, options = {}) {
+  const inboundMessage = Message.fromJSON(inboundPayload);
+  if (inboundMessage.role !== Role.ROLE_USER) {
     throw new Error("fabrication-run Monitor requires an A2A user Message");
   }
-  const input = extractRmnPart(message.parts);
-  const request = decodeSemantic(input.bytes);
-  let result;
+  const encodedRequest = extractRmnPart(inboundMessage.parts);
+  const observationRequest = decodeSemantic(encodedRequest.bytes);
+  let observationResult;
   try {
-    result = await (options.observe ?? observeCapabilityCellFabricationRun)(request);
+    observationResult = await (options.observe ?? observeCapabilityCellFabricationRun)(observationRequest);
   } catch (error) {
     if (!(error instanceof FabricationRunObservationRefusal)) throw error;
     // A bad observation is a real, typed monitoring result. Preserve it in
     // the original A2A/RMN reply rather than dropping it at a transport throw.
-    result = error.toJSON();
+    observationResult = error.toJSON();
   }
-  const outputBytes = semanticBytes(result);
+  const encodedResult = semanticBytes(observationResult);
   return Message.toJSON({
     messageId: "",
-    contextId: message.contextId ?? "",
-    taskId: message.taskId ?? "",
+    contextId: inboundMessage.contextId ?? "",
+    taskId: inboundMessage.taskId ?? "",
     role: Role.ROLE_AGENT,
-    parts: [rmnPart(outputBytes, "fabrication-run-observation.rmn.cbor")],
+    parts: [rmnPart(encodedResult, "fabrication-run-observation.rmn.cbor")],
     metadata: {
       provider: ACTOR,
-      inputNi: input.ni,
-      outputNi: semanticId(result),
+      inputNi: encodedRequest.ni,
+      outputNi: semanticId(observationResult),
     },
     extensions: [],
     referenceTaskIds: [],
