@@ -4,49 +4,49 @@ import { isDeepStrictEqual } from "node:util";
 
 // The paid seller has one writer per process. Serialize its writes so receipt
 // lines cannot interleave, and flush before acknowledging terminal completion.
-const writes = new Map();
+const pendingJournalAppends = new Map();
 
-export async function appendReceipt(path, record) {
+export async function appendJournalEntry(path, record) {
   // Serialization cannot have written bytes, so refuse malformed in-memory
   // records before touching the per-file durable-write chain.
-  const encoded = JSON.stringify(record);
-  if (typeof encoded !== "string") {
+  const serializedRecord = JSON.stringify(record);
+  if (typeof serializedRecord !== "string") {
     throw new TypeError("paid observation receipt is not a JSON record");
   }
-  const previous = writes.get(path) ?? Promise.resolve();
+  const previousAppend = pendingJournalAppends.get(path) ?? Promise.resolve();
   // After any failed append we cannot know whether a partial record reached
   // disk. Preserve that failure for this path until a verified restart reads
   // the durable journal; do not append beyond uncertain bytes.
-  const write = previous.then(async () => {
+  const appendOperation = previousAppend.then(async () => {
     await mkdir(dirname(path), { recursive: true });
-    await appendFile(path, `${encoded}\n`, {
+    await appendFile(path, `${serializedRecord}\n`, {
       encoding: "utf8",
       mode: 0o600,
       flush: true,
     });
   });
-  writes.set(path, write);
-  await write;
-  if (writes.get(path) === write) writes.delete(path);
+  pendingJournalAppends.set(path, appendOperation);
+  await appendOperation;
+  if (pendingJournalAppends.get(path) === appendOperation) pendingJournalAppends.delete(path);
 }
 
-export async function receiptState(path) {
-  let source;
+export async function recoverJournalState(path) {
+  let journalText;
   try {
-    source = await readFile(path, "utf8");
+    journalText = await readFile(path, "utf8");
   } catch (error) {
     if (error?.code === "ENOENT") return { intents: new Map(), terminals: new Map() };
     throw error;
   }
-  const records = source.split("\n").filter(Boolean).map((line) => JSON.parse(line));
+  const journalEntries = journalText.split("\n").filter(Boolean).map((line) => JSON.parse(line));
   // A successful append writes a newline and flushes it. A final JSON object
   // without that delimiter may be a torn write, even when JSON parses.
-  if (source !== "" && !source.endsWith("\n")) {
+  if (journalText !== "" && !journalText.endsWith("\n")) {
     throw new Error("paid observation journal has an unterminated record");
   }
   const intents = new Map();
   const terminals = new Map();
-  for (const record of records) {
+  for (const record of journalEntries) {
     let bucket;
     if (record?.type === "X402PaidFabricationRunObservationIntent") {
       bucket = intents;
@@ -73,3 +73,7 @@ export async function receiptState(path) {
   }
   return { intents, terminals };
 }
+
+/** Stable names for the original JSON Lines journal entry and recovery ports. */
+export const appendReceipt = appendJournalEntry;
+export const receiptState = recoverJournalState;
