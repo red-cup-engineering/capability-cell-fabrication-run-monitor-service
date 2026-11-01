@@ -44,7 +44,7 @@ function validateObservationRequest(request) {
 
 function validateJournalSequence(request) {
   let previous = null;
-  let previousTimestampMsstampMs = -Infinity;
+  let previousTimestampMs = -Infinity;
   let previousSubmillisecondDigits = "";
   const completedStageIds = new Set();
   let isTerminal = false;
@@ -76,7 +76,7 @@ function validateJournalSequence(request) {
         calendar.getUTCMonth() !== month - 1 || calendar.getUTCDate() !== day) {
       rejectObservation("invalid-event-time", `event ${sequence} names a nonexistent calendar date`);
     }
-    const eventTimestampMsstampMs = Date.parse(event.at);
+    const eventTimestampMs = Date.parse(event.at);
     // RFC 3339 permits sub-millisecond fractional seconds. The UTC epoch
     // millisecond covers time zones; compare remaining fractional digits
     // only when that epoch millisecond is equal. Trimming trailing zeroes
@@ -136,7 +136,7 @@ export function observeCapabilityCellFabricationRun(request) {
   const stageStatusEvent = currentStage === null ? null : [...events].reverse()
     .find((event) => event.stage === currentStage
       && ["stage-started", "stage-deferred", "stage-obstructed"].includes(event.type)) ?? null;
-  const blockingEvent = stageStatusEvent?.type === "stage-obstructed" ? currentStageEvent : null;
+  const blockingEvent = stageStatusEvent?.type === "stage-obstructed" ? stageStatusEvent : null;
   const fabricatedCell = [...events].reverse()
     .find((event) => event.type === "fabrication-completed")?.cell ?? null;
   const observationState = {
