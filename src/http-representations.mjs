@@ -9,8 +9,9 @@ export function acceptsCloudEventJson(acceptHeader) {
     const [mediaType, ...parameters] = mediaRange.split(";");
     if (mediaType.trim().toLowerCase() !== CLOUD_EVENT_MEDIA_TYPE) return false;
     for (const parameter of parameters) {
-      const match = /^\s*q\s*=\s*([0-9.]+)\s*$/iu.exec(parameter);
-      if (match && (Number(match[1]) === 0 || Number(match[1]) > 1 || !Number.isFinite(Number(match[1])))) return false;
+      if (!/^\s*q\s*=/iu.test(parameter)) continue;
+      const match = /^\s*q\s*=\s*(0(?:\.[0-9]{0,3})?|1(?:\.0{0,3})?)\s*$/iu.exec(parameter);
+      if (!match || Number(match[1]) === 0) return false;
     }
     return true;
   });
