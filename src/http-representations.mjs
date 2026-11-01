@@ -20,13 +20,13 @@ export function acceptsCloudEventJson(acceptHeader) {
 /** Preserve the existing JSON response unless a caller explicitly requests
  * CloudEvents and a genuinely recorded successful observation exists.
  */
-export function representPaidObservationResponse({ status, body }, acceptHeader) {
+export function representPaidObservationResponse({ status, body }, acceptHeader, { source } = {}) {
   if (status === 200
       && body?.terminal?.type === "X402PaidFabricationRunObservationReceipt"
       && body.terminal.result?.type === "CapabilityCellFabricationRunObservation"
       && acceptsCloudEventJson(acceptHeader)) {
     return { status: 200, contentType: CLOUD_EVENT_MEDIA_TYPE,
-      body: toObservationCloudEvent(body.terminal.result) };
+      body: toObservationCloudEvent(body.terminal.result, { source }) };
   }
   return { status, contentType: "application/json", body };
 }
