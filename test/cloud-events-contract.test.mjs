@@ -41,6 +41,9 @@ test("HTTP media negotiation is explicit and never silently wraps old responses"
   const result=representPaidObservationResponse(normal,CLOUD_EVENT_MEDIA_TYPE);
   assert.equal(result.contentType,CLOUD_EVENT_MEDIA_TYPE);
   assert.equal(result.body.data.state.eventHead,head);
+  const hosted=representPaidObservationResponse(normal,CLOUD_EVENT_MEDIA_TYPE,{source:"https://monitor.example/events"});
+  assert.equal(hosted.body.source,"https://monitor.example/events");
+  assert.notEqual(hosted.body.id,result.body.id);
   assert.equal(representPaidObservationResponse({status:404,body:{}},CLOUD_EVENT_MEDIA_TYPE).status,404);
 });
 
