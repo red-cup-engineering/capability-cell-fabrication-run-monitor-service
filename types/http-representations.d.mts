@@ -5,4 +5,5 @@ export declare function acceptsCloudEventJson(acceptHeader: string | undefined):
 export declare function representPaidObservationResponse(
   response: PaidObservationHttpResponse,
   acceptHeader: string | undefined,
+  options?: { readonly source?: string },
 ): { status: number; contentType: "application/json" | "application/cloudevents+json"; body: PaidObservationHttpResponse["body"] | CloudEvent<FabricationRunObservation> };
