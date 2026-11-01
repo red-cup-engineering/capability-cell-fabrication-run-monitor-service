@@ -28,6 +28,8 @@ export function createPaidObservationLedger({
     throw new TypeError("paid observation requires append, observe and refusal producers");
   }
 
+  // Preserve the quoted price at construction, not a mutable caller-owned view.
+  const retainedPricing = structuredClone(pricing);
   const retaining = new Map();
   const settling = new Map();
 
@@ -44,7 +46,7 @@ export function createPaidObservationLedger({
         error.code = "invocation-payload-conflict";
         throw error;
       }
-      return existing;
+      return structuredClone(existing);
     }
     const attempt = (async () => {
       const intent = {
@@ -52,13 +54,13 @@ export function createPaidObservationLedger({
         invocation,
         request: structuredClone(request),
       };
-      await append(intent);
+      await append(structuredClone(intent));
       intents.set(invocation, intent);
       return intent;
     })();
     retaining.set(invocation, attempt);
     try {
-      return await attempt;
+      return structuredClone(await attempt);
     } finally {
       if (retaining.get(invocation) === attempt) retaining.delete(invocation);
     }
@@ -70,10 +72,12 @@ export function createPaidObservationLedger({
       throw new TypeError("successful settlement must identify the invocation");
     }
     const settled = terminals.get(invocation);
-    if (settled) return settled;
-    if (settling.has(invocation)) return settling.get(invocation);
+    if (settled) return structuredClone(settled);
+    if (settling.has(invocation)) return structuredClone(await settling.get(invocation));
     const intent = intents.get(invocation);
     if (!intent) throw new Error("settled payment has no durable observation intent");
+    // Capture once before async observation can yield to another caller.
+    const settlement = structuredClone(evidence);
 
     const attempt = (async () => {
       let record;
@@ -81,26 +85,26 @@ export function createPaidObservationLedger({
         record = {
           type: "X402PaidFabricationRunObservationReceipt",
           invocation,
-          settlement: evidence,
-          pricing,
-          result: await observe(intent.request),
+          settlement,
+          pricing: retainedPricing,
+          result: structuredClone(await observe(structuredClone(intent.request))),
         };
       } catch (error) {
         record = {
           type: "X402PaidFabricationRunObservationRefusal",
           invocation,
-          settlement: evidence,
-          pricing,
-          refusal: projectRefusal(error),
+          settlement,
+          pricing: retainedPricing,
+          refusal: structuredClone(projectRefusal(error)),
         };
       }
-      await append(record);
+      await append(structuredClone(record));
       terminals.set(invocation, record);
       return record;
     })();
     settling.set(invocation, attempt);
     try {
-      return await attempt;
+      return structuredClone(await attempt);
     } finally {
       if (settling.get(invocation) === attempt) settling.delete(invocation);
     }
@@ -109,7 +113,7 @@ export function createPaidObservationLedger({
   function read(invocation) {
     const terminal = terminals.get(invocation);
     if (terminal) {
-      return { status: 200, body: { ok: true, invocation, status: "terminal", terminal } };
+      return { status: 200, body: { ok: true, invocation, status: "terminal", terminal: structuredClone(terminal) } };
     }
     if (intents.has(invocation)) {
       return { status: 202, body: { ok: true, invocation, status: "intent-recorded", settlement: "unobserved", terminal: null } };
