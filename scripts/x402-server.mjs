@@ -2,7 +2,7 @@
 
 import { readFile } from "node:fs/promises";
 import { admitOcapnSturdyRef } from "../src/ocapn-admission.mjs";
-import { appendReceipt, receiptState } from "../src/paid-observation-journal.mjs";
+import { appendJournalEntry, recoverJournalState } from "../src/paid-observation-journal.mjs";
 import { createPaidObservationLedger } from "../src/paid-observation-ledger.mjs";
 import { paidObservationResultReference, paidObservationInvocationFromReference } from "../src/paid-observation-identity.mjs";
 import express from "express";
@@ -12,6 +12,7 @@ import {
   x402SettlementEvidence,
 } from "@red-cup-engineering/x402-services-section";
 import { FabricationRunObservationRefusal, observeCapabilityCellFabricationRun } from "../src/observe.mjs";
+import { representPaidObservationResponse } from "../src/http-representations.mjs";
 
 function required(name) {
   const value = process.env[name];
@@ -53,11 +54,11 @@ export async function main() {
       || offer.price.payTo?.toLowerCase() !== settlement.split(":").at(-1).toLowerCase()) {
     throw new Error("published offer drifted from the hired pricing provider");
   }
-  const recovered = await receiptState(receiptPath);
+  const recovered = await recoverJournalState(receiptPath);
   const ledger = createPaidObservationLedger({
     intents: recovered.intents,
     terminals: recovered.terminals,
-    append: (record) => appendReceipt(receiptPath, record),
+    append: (record) => appendJournalEntry(receiptPath, record),
     observe: observeCapabilityCellFabricationRun,
     projectRefusal: (error) => error instanceof FabricationRunObservationRefusal
       ? error.toJSON()
@@ -89,7 +90,7 @@ export async function main() {
         description: "Observe one append-only Capability Cell fabrication run trajectory.",
       },
     },
-    afterSettle: async (event) => ledger.settle(x402SettlementEvidence(event)),
+    afterSettle: async (event) => ledger.recordPaymentSettlement(x402SettlementEvidence(event)),
   });
   const app = express();
   app.set("trust proxy", "loopback");
@@ -101,7 +102,7 @@ export async function main() {
     const outcome = await admitOcapnSturdyRef({
       authorization: request.get("authorization"),
       admissionUrl: process.env.OCAPN_ADMISSION_URL,
-      appendAdmission: (record) => appendReceipt(receiptPath, record),
+      appendAdmission: (record) => appendJournalEntry(receiptPath, record),
     });
     if (!outcome.admitted) {
       return response.status(outcome.status).json({ ok: false, refusal: outcome.refusal });
@@ -126,7 +127,7 @@ export async function main() {
     }
     try {
       // Source-owned journal retention must finish before settlement.
-      await ledger.retain(invocation, request.body);
+      await ledger.recordSignedRequest(invocation, request.body);
     } catch (error) {
       if (error?.code === "invocation-payload-conflict") {
         return response.status(409).json({
@@ -146,7 +147,7 @@ export async function main() {
   app.use(boundary.middleware);
   app.post(resource, (request, response) => {
     const invocation = x402PaymentIdentity(request.get("payment-signature"));
-    const reading = ledger.read(invocation);
+    const reading = ledger.getReceiptResponse(invocation);
     if (reading.status === 404) throw new Error("payment invocation has no matching durable intent");
     return response.status(reading.status).json({
       ok: true,
@@ -160,8 +161,9 @@ export async function main() {
     if (!invocation) {
       return response.status(400).json({ ok: false, refusal: { type: "InvalidInvocationIdentity" } });
     }
-    const reading = ledger.read(invocation);
-    return response.status(reading.status).json(reading.body);
+    const reading = ledger.getReceiptResponse(invocation);
+    const representation = representPaidObservationResponse(reading, request.get("accept"), { source: process.env.CAPABILITY_MONITOR_EVENT_SOURCE });
+    return response.status(representation.status).type(representation.contentType).json(representation.body);
   });
   const host = process.env.HOST ?? "127.0.0.1";
   const port = Number(process.env.PORT ?? "15635");

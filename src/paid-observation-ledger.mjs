@@ -29,15 +29,15 @@ export function createPaidObservationLedger({
   }
 
   // Preserve the quoted price at construction, not a mutable caller-owned view.
-  const retainedPricing = structuredClone(pricing);
-  const retaining = new Map();
-  const settling = new Map();
+  const priceQuote = structuredClone(pricing);
+  const pendingRequestWrites = new Map();
+  const pendingSettlementWrites = new Map();
 
-  async function retain(invocation, request) {
+  async function recordSignedRequest(invocation, request) {
     if (typeof invocation !== "string" || invocation === "") {
       throw new TypeError("a signed payment invocation identity is required");
     }
-    const inFlight = retaining.get(invocation);
+    const inFlight = pendingRequestWrites.get(invocation);
     if (inFlight) await inFlight;
     const existing = intents.get(invocation);
     if (existing) {
@@ -58,22 +58,22 @@ export function createPaidObservationLedger({
       intents.set(invocation, intent);
       return intent;
     })();
-    retaining.set(invocation, attempt);
+    pendingRequestWrites.set(invocation, attempt);
     try {
       return structuredClone(await attempt);
     } finally {
-      if (retaining.get(invocation) === attempt) retaining.delete(invocation);
+      if (pendingRequestWrites.get(invocation) === attempt) pendingRequestWrites.delete(invocation);
     }
   }
 
-  async function settle(evidence) {
+  async function recordPaymentSettlement(evidence) {
     const invocation = evidence?.invocation;
     if (typeof invocation !== "string" || invocation === "") {
       throw new TypeError("successful settlement must identify the invocation");
     }
     const settled = terminals.get(invocation);
     if (settled) return structuredClone(settled);
-    if (settling.has(invocation)) return structuredClone(await settling.get(invocation));
+    if (pendingSettlementWrites.has(invocation)) return structuredClone(await pendingSettlementWrites.get(invocation));
     const intent = intents.get(invocation);
     if (!intent) throw new Error("settled payment has no durable observation intent");
     // Capture once before async observation can yield to another caller.
@@ -86,7 +86,7 @@ export function createPaidObservationLedger({
           type: "X402PaidFabricationRunObservationReceipt",
           invocation,
           settlement,
-          pricing: retainedPricing,
+          pricing: priceQuote,
           result: structuredClone(await observe(structuredClone(intent.request))),
         };
       } catch (error) {
@@ -94,7 +94,7 @@ export function createPaidObservationLedger({
           type: "X402PaidFabricationRunObservationRefusal",
           invocation,
           settlement,
-          pricing: retainedPricing,
+          pricing: priceQuote,
           refusal: structuredClone(projectRefusal(error)),
         };
       }
@@ -102,15 +102,15 @@ export function createPaidObservationLedger({
       terminals.set(invocation, record);
       return record;
     })();
-    settling.set(invocation, attempt);
+    pendingSettlementWrites.set(invocation, attempt);
     try {
       return structuredClone(await attempt);
     } finally {
-      if (settling.get(invocation) === attempt) settling.delete(invocation);
+      if (pendingSettlementWrites.get(invocation) === attempt) pendingSettlementWrites.delete(invocation);
     }
   }
 
-  function read(invocation) {
+  function getReceiptResponse(invocation) {
     const terminal = terminals.get(invocation);
     if (terminal) {
       return { status: 200, body: { ok: true, invocation, status: "terminal", terminal: structuredClone(terminal) } };
@@ -124,5 +124,8 @@ export function createPaidObservationLedger({
     };
   }
 
-  return Object.freeze({ retain, settle, read });
+  return Object.freeze({
+    recordSignedRequest, recordPaymentSettlement, getReceiptResponse,
+    retain: recordSignedRequest, settle: recordPaymentSettlement, read: getReceiptResponse,
+  });
 }
