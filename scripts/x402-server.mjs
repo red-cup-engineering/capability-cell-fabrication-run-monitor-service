@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import { readFile } from "node:fs/promises";
-import { admitOcapnSturdyRef } from "../src/ocapn-admission.mjs";
-import { appendJournalEntry, recoverJournalState } from "../src/paid-observation-journal.mjs";
+import { validateOcapnSturdyRef } from "../src/ocapn-admission.mjs";
+import { appendLogEntry, recoverLogState } from "../src/paid-observation-journal.mjs";
 import { createPaidObservationLedger } from "../src/paid-observation-ledger.mjs";
 import { paidObservationResultReference, paidObservationInvocationFromReference } from "../src/paid-observation-identity.mjs";
 import express from "express";
@@ -11,7 +11,7 @@ import {
   x402PaymentIdentity,
   x402SettlementEvidence,
 } from "@red-cup-engineering/x402-services-section";
-import { FabricationRunObservationRefusal, observeCapabilityCellFabricationRun } from "../src/observe.mjs";
+import { FabricationRunObservationRejection, observeCapabilityCellFabricationRun } from "../src/observe.mjs";
 import { representPaidObservationResponse } from "../src/http-representations.mjs";
 
 function required(name) {
@@ -54,13 +54,13 @@ export async function main() {
       || offer.price.payTo?.toLowerCase() !== settlement.split(":").at(-1).toLowerCase()) {
     throw new Error("published offer drifted from the hired pricing provider");
   }
-  const recovered = await recoverJournalState(receiptPath);
+  const recovered = await recoverLogState(receiptPath);
   const ledger = createPaidObservationLedger({
     intents: recovered.intents,
     terminals: recovered.terminals,
-    append: (record) => appendJournalEntry(receiptPath, record),
+    append: (record) => appendLogEntry(receiptPath, record),
     observe: observeCapabilityCellFabricationRun,
-    projectRefusal: (error) => error instanceof FabricationRunObservationRefusal
+    projectRefusal: (error) => error instanceof FabricationRunObservationRejection
       ? error.toJSON()
       : {
         type: "CapabilityCellFabricationRunObservationRefusal",
@@ -99,10 +99,10 @@ export async function main() {
     response.json({ ...offer, pricing: priced.result });
   });
   app.post(resource, async (request, response, next) => {
-    const outcome = await admitOcapnSturdyRef({
+    const outcome = await validateOcapnSturdyRef({
       authorization: request.get("authorization"),
       admissionUrl: process.env.OCAPN_ADMISSION_URL,
-      appendAdmission: (record) => appendJournalEntry(receiptPath, record),
+      appendAdmission: (record) => appendLogEntry(receiptPath, record),
     });
     if (!outcome.admitted) {
       return response.status(outcome.status).json({ ok: false, refusal: outcome.refusal });

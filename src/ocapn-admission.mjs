@@ -13,21 +13,21 @@ const unavailable = (type) => ({
   refusal: { type },
 });
 
-export async function admitOcapnSturdyRef({
+export async function validateOcapnSturdyRef({
   authorization,
-  admissionUrl,
-  appendAdmission,
+  admissionUrl: validationUrl,
+  appendAdmission: appendValidation,
   fetchImpl = fetch,
 }) {
   const match = CAPABILITY.exec(authorization ?? "");
   if (!match) return deny();
-  if (typeof admissionUrl !== "string" || admissionUrl.trim() === ""
-      || typeof appendAdmission !== "function") {
+  if (typeof validationUrl !== "string" || validationUrl.trim() === ""
+      || typeof appendValidation !== "function") {
     return unavailable("OCapNAdmissionProviderUnavailable");
   }
   let response;
   try {
-    response = await fetchImpl(admissionUrl, {
+    response = await fetchImpl(validationUrl, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
@@ -42,18 +42,18 @@ export async function admitOcapnSturdyRef({
     return response?.status === 401 || response?.status === 403
       ? deny() : unavailable("OCapNAdmissionProviderUnavailable");
   }
-  let admission;
+  let validation;
   try {
-    admission = await response.json();
+    validation = await response.json();
   } catch {
     return unavailable("OCapNAdmissionProviderUnavailable");
   }
-  if (admission?.admitted !== true) return deny();
+  if (validation?.admitted !== true) return deny();
   try {
-    await appendAdmission({
+    await appendValidation({
       type: "OCapNAdmissionReceipt",
       operation: "observe-capability-cell-fabrication-run",
-      admission,
+      admission: validation,
     });
   } catch {
     return unavailable("OCapNAdmissionReceiptUnavailable");

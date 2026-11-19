@@ -12,7 +12,7 @@ export function createPaidObservationLedger({
   terminals,
   append,
   observe,
-  projectRefusal,
+  projectRefusal: projectRejection,
   pricing,
 }) {
   if (!(intents instanceof Map) || !(terminals instanceof Map)) {
@@ -24,7 +24,7 @@ export function createPaidObservationLedger({
     }
   }
   if (typeof append !== "function" || typeof observe !== "function"
-      || typeof projectRefusal !== "function") {
+      || typeof projectRejection !== "function") {
     throw new TypeError("paid observation requires append, observe and refusal producers");
   }
 
@@ -95,7 +95,7 @@ export function createPaidObservationLedger({
           invocation,
           settlement,
           pricing: priceQuote,
-          refusal: structuredClone(projectRefusal(error)),
+          refusal: structuredClone(projectRejection(error)),
         };
       }
       await append(structuredClone(record));
@@ -110,7 +110,7 @@ export function createPaidObservationLedger({
     }
   }
 
-  function getReceiptResponse(invocation) {
+  function getRecordResponse(invocation) {
     const terminal = terminals.get(invocation);
     if (terminal) {
       return { status: 200, body: { ok: true, invocation, status: "terminal", terminal: structuredClone(terminal) } };
@@ -125,7 +125,7 @@ export function createPaidObservationLedger({
   }
 
   return Object.freeze({
-    recordSignedRequest, recordPaymentSettlement, getReceiptResponse,
-    retain: recordSignedRequest, settle: recordPaymentSettlement, read: getReceiptResponse,
+    recordSignedRequest, recordPaymentSettlement, getReceiptResponse: getRecordResponse,
+    retain: recordSignedRequest, settle: recordPaymentSettlement, read: getRecordResponse,
   });
 }

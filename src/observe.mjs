@@ -5,7 +5,7 @@ const CONTENT_ADDRESS_PATTERN = /^ni:\/\/\/sha-256;[A-Za-z0-9_-]{43}$/u;
 const FABRICATION_RUN_ID_PATTERN = /^(?:[A-Za-z0-9_-]{43}|[0-9a-f-]{36})$/u;
 const RFC3339_TIMESTAMP_PATTERN = /^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/u;
 
-export class FabricationRunObservationRefusal extends Error {
+export class FabricationRunObservationRejection extends Error {
   constructor(code, reason) {
     super(reason);
     this.name = "FabricationRunObservationRefusal";
@@ -22,7 +22,7 @@ export class FabricationRunObservationRefusal extends Error {
 }
 
 function rejectObservation(code, reason) {
-  throw new FabricationRunObservationRefusal(code, reason);
+  throw new FabricationRunObservationRejection(code, reason);
 }
 
 function validateObservationRequest(request) {
@@ -42,7 +42,7 @@ function validateObservationRequest(request) {
   }
 }
 
-function validateJournalSequence(request) {
+function validateLogSequence(request) {
   let previous = null;
   let previousTimestampMs = -Infinity;
   let previousSubmillisecondDigits = "";
@@ -126,7 +126,7 @@ function validateJournalSequence(request) {
 
 export function observeCapabilityCellFabricationRun(request) {
   validateObservationRequest(request);
-  validateJournalSequence(request);
+  validateLogSequence(request);
   const { events, stages } = request;
   const originatingDemand = events.find((event) => event.type === "demand-submitted")?.demand ?? null;
   const completedStageIds = new Set(events
