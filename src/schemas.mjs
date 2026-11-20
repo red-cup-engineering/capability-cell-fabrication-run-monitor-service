@@ -17,8 +17,8 @@ function immutableSchema(value) {
 
 export const OBSERVATION_INPUT_SCHEMA = immutableSchema(inputSchema);
 export const OBSERVATION_OUTPUT_SCHEMA = immutableSchema(outputSchema);
-export const OBSERVATION_REJECTION_SCHEMA = immutableSchema(refusalSchema);
+export const OBSERVATION_REFUSAL_SCHEMA = immutableSchema(refusalSchema);
 export const OBSERVED_RUN_STATE_SCHEMA = immutableSchema(stateSchema);
 
 /** Opt-in authoring schema. Never silently gate historical journal replay. */
-export const PAID_LOG_ENTRY_SCHEMA = immutableSchema(paidJournalEntrySchema);
+export const PAID_JOURNAL_ENTRY_SCHEMA = immutableSchema(paidJournalEntrySchema);
