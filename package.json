@@ -58,7 +58,8 @@
     "@red-cup-engineering/relation-model-notation-runtime": "7.0.0",
     "@red-cup-engineering/witness-journal-rdf-projection-service": "1.1.0",
     "@red-cup-engineering/x402-services-section": "1.2.1",
-    "express": "5.2.1"
+    "express": "5.2.1",
+    "@red-cup-engineering/signcell": "^0.18.0 || 0.18.1-dev.0"
   },
   "license": "MIT",
   "funding": {
