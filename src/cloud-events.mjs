@@ -1,4 +1,5 @@
-import { createHash } from "node:crypto";
+import { sha256Hex } from "@red-cup-engineering/cryptographic-computer-data-engineering-services-section/integrity";
+
 
 // A format adapter over accepted readings, not a second event journal.
 // CloudEvents JSON event format 1.0 (application/cloudevents+json).
@@ -44,9 +45,7 @@ export function toObservationCloudEvent(observation, { source = OBSERVATION_EVEN
   }
   // This ID names the *representation's exact JSON bytes*, not the native
   // Sign/WitnessJournal semantic NI. The latter remains in data.state.eventHead.
-  const eventId = `sha256-${createHash("sha256")
-    .update(JSON.stringify({ source: sourceUri, data }))
-    .digest("hex")}`;
+  const eventId = `sha256-${sha256Hex(JSON.stringify({ source: sourceUri, data }))}`;
   return {
     specversion: "1.0",
     id: eventId,
