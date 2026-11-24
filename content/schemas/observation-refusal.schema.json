@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:red-cup-engineering:schema:capability-cell-fabrication-run-observation-refusal:v1",
+  "type": "object",
+  "required": ["type", "code", "reason"],
+  "properties": {
+    "type": { "const": "CapabilityCellFabricationRunObservationRefusal" },
+    "code": { "type": "string", "minLength": 1 },
+    "reason": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": false
+}

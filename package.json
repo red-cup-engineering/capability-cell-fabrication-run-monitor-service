@@ -1,0 +1,75 @@
+{
+  "name": "@red-cup-engineering/capability-cell-fabrication-run-monitor-service",
+  "version": "0.1.2",
+  "private": false,
+  "type": "module",
+  "description": "Validates and folds one append-only Capability Cell fabrication event trajectory into its current observable state.",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.mts",
+      "import": "./src/observe.mjs"
+    },
+    "./a2a-executor": {
+      "types": "./types/a2a-executor.d.mts",
+      "import": "./src/a2a-executor.mjs"
+    },
+    "./event-identity": {
+      "types": "./types/event-identity.d.mts",
+      "import": "./src/event-identity.mjs"
+    },
+    "./schemas": {
+      "types": "./types/schemas.d.mts",
+      "import": "./src/schemas.mjs"
+    },
+    "./cloud-events": {
+      "types": "./types/cloud-events.d.mts",
+      "import": "./src/cloud-events.mjs"
+    },
+    "./http-representations": {
+      "types": "./types/http-representations.d.mts",
+      "import": "./src/http-representations.mjs"
+    },
+    "./paid-observation-ledger": {
+      "types": "./types/paid-ledger.d.mts",
+      "import": "./src/paid-observation-ledger.mjs"
+    },
+    "./paid-observation-journal": {
+      "types": "./types/paid-journal.d.mts",
+      "import": "./src/paid-observation-journal.mjs"
+    }
+  },
+  "bin": {
+    "observe-capability-cell-fabrication-run": "./scripts/observe.mjs",
+    "serve-capability-cell-fabrication-run-observation-seller": "./scripts/x402-server.mjs"
+  },
+  "scripts": {
+    "check": "node --check src/schemas.mjs && node --check src/event-identity.mjs && node --check src/observe.mjs && node --check src/paid-observation-ledger.mjs && node --check src/paid-observation-journal.mjs && node --check src/ocapn-admission.mjs && node --check src/paid-observation-identity.mjs && node --check src/a2a-executor.mjs && node --check scripts/observe.mjs && node --check scripts/x402-server.mjs && node --check src/cloud-events.mjs && node --check src/http-representations.mjs",
+    "verify": "npm run check",
+    "check:types": "tsc --noEmit -p tsconfig.types.json"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@a2a-js/sdk": "1.0.0-beta.0",
+    "@red-cup-engineering/a2a-contracted-agent-service": "2.0.5",
+    "@red-cup-engineering/a2a-rmn-part-service": "1.0.1",
+    "@red-cup-engineering/activitypub-services-section": "1.0.2",
+    "@red-cup-engineering/relation-model-notation-runtime": "7.0.0",
+    "@red-cup-engineering/witness-journal-rdf-projection-service": "1.1.0",
+    "@red-cup-engineering/x402-services-section": "1.2.1",
+    "express": "5.2.1",
+    "@red-cup-engineering/signcell": "^0.18.0 || 0.18.1-dev.0",
+    "@red-cup-engineering/cryptographic-computer-data-engineering-services-section": "0.3.8-dev.0"
+  },
+  "license": "MIT",
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/561-group/.github/blob/main/TIPS.md"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/red-cup-engineering/capability-cell-fabrication-run-monitor-service.git"
+  },
+  "types": "./types/index.d.mts"
+}
