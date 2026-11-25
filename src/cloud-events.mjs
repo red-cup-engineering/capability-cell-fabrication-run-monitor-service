@@ -1,4 +1,4 @@
-import { sha256Hex } from "@red-cup-engineering/cryptographic-computer-data-engineering-services-section/integrity";
+import { sha256Hex } from "@red-cup-engineering/semiotic-content-address-system";
 
 
 // A format adapter over accepted readings, not a second event journal.
