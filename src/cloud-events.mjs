@@ -1,4 +1,5 @@
 import { sha256Hex } from "@red-cup-engineering/semiotic-content-address-system";
+import { canonicalJson } from "@red-cup-engineering/json-engine/canonical-json";
 
 
 // A format adapter over accepted readings, not a second event journal.
@@ -43,9 +44,9 @@ export function toObservationCloudEvent(observation, { source = OBSERVATION_EVEN
       || !Number.isFinite(Date.parse(state.lastEventAt))) {
     throw new TypeError("CloudEvents projection requires typed observation data with consistent source event metadata");
   }
-  // This ID names the *representation's exact JSON bytes*, not the native
+  // This ID names the representation's canonical JSON text, not the native
   // Sign/WitnessJournal semantic NI. The latter remains in data.state.eventHead.
-  const eventId = `sha256-${sha256Hex(JSON.stringify({ source: sourceUri, data }))}`;
+  const eventId = `sha256-${sha256Hex(canonicalJson({ source: sourceUri, data }))}`;
   return {
     specversion: "1.0",
     id: eventId,
